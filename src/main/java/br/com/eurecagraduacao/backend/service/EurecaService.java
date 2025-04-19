@@ -8,7 +8,6 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -19,7 +18,7 @@ import static br.com.eurecagraduacao.backend.util.Constants.periodoDe;
 @Service
 public class EurecaService {
 
-    private String baseUrl = Constants.dasUrl;
+    private final String baseUrl = Constants.dasUrl;
 
     private final RestTemplate restTemplate;
 
@@ -27,15 +26,14 @@ public class EurecaService {
         this.restTemplate = new RestTemplate();
     }
 
-    public List<StudentModel> buscarEstudantesGraduadosOuEvadidosPorCurso(Integer codigoDoCurso) {
+    public List<StudentDTO> buscarEstudantesGraduadosOuEvadidosPorCurso(Integer codigoDoCurso) {
 
         String url = baseUrl +
                 "/estudantes" +
-                "?periodo-de-evasao-de=" + periodoDe+
-                "&periodo-de-evasao-ate=" + periodoAte+
-                "&pagina=1&tamanho=10" + //para fins de teste
+                "?periodo-de-evasao-de=" + periodoDe +
+                "&periodo-de-evasao-ate=" + periodoAte +
+                "&pagina=1&tamanho=10" + // para fins de teste
                 "&curso=" + codigoDoCurso;
-
 
         ResponseEntity<List<StudentModel>> response = restTemplate.exchange(
                 url,
@@ -45,10 +43,16 @@ public class EurecaService {
                 }
         );
 
-        return response.getBody();
+        List<StudentModel> estudantes = response.getBody();
+
+        if (estudantes == null) {
+            return List.of();
+        }
+
+        return estudantes.stream().map(StudentDTO::fromModel).toList();
     }
 
-    public List<StudentModel> buscarEstudantesAtivosPorCurso(Integer codigoDoCurso) {
+    public List<StudentDTO> buscarEstudantesAtivosPorCurso(Integer codigoDoCurso) {
         String url = baseUrl +
                 "/estudantes" +
                 "?situacao-do-estudante=ATIVOS" +
@@ -63,7 +67,13 @@ public class EurecaService {
                 }
         );
 
-        return response.getBody();
+        List<StudentModel> estudantes = response.getBody();
+
+        if (estudantes == null) {
+            return List.of();
+        }
+
+        return estudantes.stream().map(StudentDTO::fromModel).toList();
     }
 
     public List<CourseHomeDTO> buscarCursosAtivos() {
@@ -300,4 +310,78 @@ public class EurecaService {
                 .map(EnrollmentDTO::fromModel)
                 .toList();
     }
+
+
+    public OwnProfileDTO buscarUserInfo(String matricula, String token) {
+        String url = baseUrl + "/estudantes/estudante?estudante=" + matricula;
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("token-de-autenticacao", token);
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<StudentModel> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        StudentModel model = response.getBody();
+
+        if (model != null) {
+            return OwnProfileDTO.fromModel(model);
+        }
+
+        return null;
+    }
+
+    public List<MetricsHistoryModel> buscarMetricas(String matricula, String token) {
+        String url = baseUrl +
+                "/estudantes/metricas/estudante?estudante=" + matricula;
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("token-de-autenticacao", token);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<StudentMetricsModel> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                StudentMetricsModel.class
+        );
+
+        StudentMetricsModel studentMetrics = response.getBody();
+
+        return studentMetrics != null ? studentMetrics.getHistoricoDeMetricas() : List.of();
+    }
+
+
+    public List<EnrollmentHistoryModel> buscarHistorico(String matricula, String token) {
+        String url = baseUrl +
+                "/estudantes/historico/estudante?estudante=" + matricula;
+
+        RestTemplate restTemplate = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("token-de-autenticacao", token);
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+
+        ResponseEntity<StudentHistoryModel> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                entity,
+                StudentHistoryModel.class
+        );
+
+        StudentHistoryModel history = response.getBody();
+
+        return history != null ? history.getHistoricoDeMatriculas() : List.of();
+    }
+
 }

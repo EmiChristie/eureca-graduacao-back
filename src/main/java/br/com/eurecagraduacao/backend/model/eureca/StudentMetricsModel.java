@@ -1,10 +1,9 @@
 package br.com.eurecagraduacao.backend.model.eureca;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import java.util.List;
 
-public class StudentModel {
+public class StudentMetricsModel {
 
     @JsonProperty("matricula_do_estudante")
     private String matriculaDoEstudante;
@@ -99,6 +98,9 @@ public class StudentModel {
     @JsonProperty("politica_afirmativa")
     private String politicaAfirmativa;
 
+    @JsonProperty("creditos_do_cra")
+    private Integer creditosDoCra;
+
     @JsonProperty("cra")
     private double cra;
 
@@ -119,9 +121,6 @@ public class StudentModel {
 
     @JsonProperty("iean")
     private double iean;
-
-    @JsonProperty("creditos_do_cra")
-    private Integer creditosDoCra;
 
     @JsonProperty("notas_acumuladas")
     private double notasAcumuladas;
@@ -153,6 +152,12 @@ public class StudentModel {
     @JsonProperty("taxa_de_sucesso")
     private double taxaDeSucesso;
 
+    @JsonProperty("prac_renda_per_capita_ate")
+    private double pracRendaPerCapitaAte;
+
+    @JsonProperty("historico_de_metricas")
+    private List<MetricsHistoryModel> historicoDeMetricas;
+
     @JsonProperty("prac_atualizado")
     private String pracAtualizado;
 
@@ -168,9 +173,6 @@ public class StudentModel {
     @JsonProperty("prac_indigena_aldeado")
     private String pracIndigenaAldeado;
 
-    @JsonProperty("prac_renda_per_capita_ate")
-    private double pracRendaPerCapitaAte;
-
     @JsonProperty("prac_deficiente")
     private String pracDeficiente;
 
@@ -183,43 +185,8 @@ public class StudentModel {
     @JsonProperty("ufpb")
     private Integer ufpb;
 
-    public String getSexo() { return sexo; }
-    public String getCor() { return cor; }
-    public List<String> getDeficiencias() { return deficiencias; }
-    public String getPoliticaAfirmativa() { return politicaAfirmativa; }
-    public double getCra() { return cra; }
-    public double getMc() { return mc; }
-    public double getIech() { return iech; }
-    public double getIepl() { return iepl; }
-    public double getIea() { return iea; }
-    public double getMcn() { return mcn; }
-    public double getIean() { return iean; }
-    public Integer getCreditosDoCra() { return creditosDoCra; }
-    public double getNotasAcumuladas() { return notasAcumuladas; }
-    public Integer getPeriodosCompletados() { return periodosCompletados; }
-    public Integer getCreditosTentados() { return creditosTentados; }
-    public Integer getCreditosCompletados() { return creditosCompletados; }
-    public Integer getCreditosIsentos() { return creditosIsentos; }
-    public Integer getCreditosFalhados() { return creditosFalhados; }
-    public Integer getCreditosSuspensos() { return creditosSuspensos; }
-    public Integer getCreditosEmAndamento() { return creditosEmAndamento; }
-    public double getVelocidadeMedia() { return velocidadeMedia; }
-    public double getTaxaDeSucesso() { return taxaDeSucesso; }
-    public String getSituacao() {
-        return situacao;
-    }
+    // Getters
 
-    public String getPeriodoDeEvasao() {
-        return periodoDeEvasao;
-    }
-
-    public String getMotivoDeEvasao() {
-        return motivoDeEvasao;
-    }
-
-    public String getPeriodoDeIngresso() {
-        return periodoDeIngresso;
-    }
     public String getMatriculaDoEstudante() {
         return matriculaDoEstudante;
     }
@@ -232,6 +199,14 @@ public class StudentModel {
         return codigoDoCurso;
     }
 
+    public String getNomeDoCurso() {
+        return nomeDoCurso;
+    }
+
+    public String getTurnoDoCurso() {
+        return turnoDoCurso;
+    }
+
     public Integer getCodigoDoCurriculo() {
         return codigoDoCurriculo;
     }
@@ -240,7 +215,216 @@ public class StudentModel {
         return campus;
     }
 
+    public String getNomeDoCampus() {
+        return nomeDoCampus;
+    }
+
     public Integer getCodigoDoSetor() {
         return codigoDoSetor;
     }
+
+    public String getNomeDoSetor() {
+        return nomeDoSetor;
+    }
+
+    public String getEstadoCivil() {
+        return estadoCivil;
+    }
+
+    public String getEndereco() {
+        return endereco;
+    }
+
+    public String getSexo() {
+        return sexo;
+    }
+
+    public String getDataDeNascimento() {
+        return dataDeNascimento;
+    }
+
+    public String getCpf() {
+        return cpf;
+    }
+
+    public String getCep() {
+        return cep;
+    }
+
+    public String getTelefone() {
+        return telefone;
+    }
+
+    public String getSituacao() {
+        return situacao;
+    }
+
+    public String getMotivoDeEvasao() {
+        return motivoDeEvasao;
+    }
+
+    public String getPeriodoDeEvasao() {
+        return periodoDeEvasao;
+    }
+
+    public String getFormaDeIngresso() {
+        return formaDeIngresso;
+    }
+
+    public String getPeriodoDeIngresso() {
+        return periodoDeIngresso;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getNacionalidade() {
+        return nacionalidade;
+    }
+
+    public String getLocalDeNascimento() {
+        return localDeNascimento;
+    }
+
+    public String getNaturalidade() {
+        return naturalidade;
+    }
+
+    public String getCor() {
+        return cor;
+    }
+
+    public List<String> getDeficiencias() {
+        return deficiencias;
+    }
+
+    public Integer getAnoDeConclusaoEnsinoMedio() {
+        return anoDeConclusaoEnsinoMedio;
+    }
+
+    public String getTipoDeEnsinoMedio() {
+        return tipoDeEnsinoMedio;
+    }
+
+    public String getPoliticaAfirmativa() {
+        return politicaAfirmativa;
+    }
+
+    public Integer getCreditosDoCra() {
+        return creditosDoCra;
+    }
+
+    public double getCra() {
+        return cra;
+    }
+
+    public double getMc() {
+        return mc;
+    }
+
+    public double getIech() {
+        return iech;
+    }
+
+    public double getIepl() {
+        return iepl;
+    }
+
+    public double getIea() {
+        return iea;
+    }
+
+    public double getMcn() {
+        return mcn;
+    }
+
+    public double getIean() {
+        return iean;
+    }
+
+    public double getNotasAcumuladas() {
+        return notasAcumuladas;
+    }
+
+    public Integer getPeriodosCompletados() {
+        return periodosCompletados;
+    }
+
+    public Integer getCreditosTentados() {
+        return creditosTentados;
+    }
+
+    public Integer getCreditosCompletados() {
+        return creditosCompletados;
+    }
+
+    public Integer getCreditosIsentos() {
+        return creditosIsentos;
+    }
+
+    public Integer getCreditosFalhados() {
+        return creditosFalhados;
+    }
+
+    public Integer getCreditosSuspensos() {
+        return creditosSuspensos;
+    }
+
+    public Integer getCreditosEmAndamento() {
+        return creditosEmAndamento;
+    }
+
+    public double getVelocidadeMedia() {
+        return velocidadeMedia;
+    }
+
+    public double getTaxaDeSucesso() {
+        return taxaDeSucesso;
+    }
+
+    public double getPracRendaPerCapitaAte() {
+        return pracRendaPerCapitaAte;
+    }
+
+    public List<MetricsHistoryModel> getHistoricoDeMetricas() {
+        return historicoDeMetricas;
+    }
+
+    public String getPracAtualizado() {
+        return pracAtualizado;
+    }
+
+    public String getPracAtualizadoEm() {
+        return pracAtualizadoEm;
+    }
+
+    public String getPracCor() {
+        return pracCor;
+    }
+
+    public String getPracQuilombola() {
+        return pracQuilombola;
+    }
+
+    public String getPracIndigenaAldeado() {
+        return pracIndigenaAldeado;
+    }
+
+    public String getPracDeficiente() {
+        return pracDeficiente;
+    }
+
+    public List<String> getPracDeficiencias() {
+        return pracDeficiencias;
+    }
+
+    public String getPracDeslocouMudou() {
+        return pracDeslocouMudou;
+    }
+
+    public Integer getUfpb() {
+        return ufpb;
+    }
+
 }

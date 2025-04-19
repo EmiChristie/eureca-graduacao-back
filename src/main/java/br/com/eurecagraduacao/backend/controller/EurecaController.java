@@ -1,11 +1,9 @@
 package br.com.eurecagraduacao.backend.controller;
 
-import br.com.eurecagraduacao.backend.dto.eureca.CourseHomeDTO;
-import br.com.eurecagraduacao.backend.dto.eureca.CurriculoDTO;
-import br.com.eurecagraduacao.backend.dto.eureca.DisciplinasCurriculoDTO;
-import br.com.eurecagraduacao.backend.dto.eureca.EnrollmentDTO;
+import br.com.eurecagraduacao.backend.dto.eureca.*;
 import br.com.eurecagraduacao.backend.model.eureca.CourseModel;
-import br.com.eurecagraduacao.backend.model.eureca.StudentModel;
+import br.com.eurecagraduacao.backend.model.eureca.EnrollmentHistoryModel;
+import br.com.eurecagraduacao.backend.model.eureca.MetricsHistoryModel;
 import br.com.eurecagraduacao.backend.service.EurecaService;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,14 +20,14 @@ public class EurecaController {
     }
 
     @GetMapping("/estudantes-graduados-ou-evadidos-por-curso")
-    public List<StudentModel> getEstudantesGraduadosOuEvadidosPorCurso(
+    public List<StudentDTO> getEstudantesGraduadosOuEvadidosPorCurso(
             @RequestParam("curso") Integer codigoDoCurso
     ) {
         return eurecaService.buscarEstudantesGraduadosOuEvadidosPorCurso(codigoDoCurso);
     }
 
     @GetMapping("/estudantes-ativos-por-curso")
-    public List<StudentModel> getEstudantesAtivosPorCurso(
+    public List<StudentDTO> getEstudantesAtivosPorCurso(
             @RequestParam("curso") Integer codigoDoCurso
     ) {
         return eurecaService.buscarEstudantesAtivosPorCurso(codigoDoCurso);
@@ -94,6 +92,32 @@ public class EurecaController {
     ) {
         return eurecaService.buscarMatriculas(codigoDoCurso,codigoDaDisciplina);
     }
+
+    @GetMapping("/user-info")
+    public OwnProfileDTO getStudentInfo(
+            @RequestParam("matricula") String matricula,
+            @RequestParam("token") String token //depois mudar pra header
+    ) {
+        return eurecaService.buscarUserInfo(matricula,token);
+    }
+
+    @GetMapping("/user-metrics")
+    public List<MetricsHistoryModel> getStudentMetrics(
+            @RequestParam("matricula") String matricula,
+            @RequestParam("token") String token //depois mudar pra header
+    ) {
+        return eurecaService.buscarMetricas(matricula,token);
+    }
+
+
+    @GetMapping("/user-history")
+    public List<EnrollmentHistoryModel> getStudentHistory(
+            @RequestParam("matricula") String matricula,
+            @RequestParam("token") String token //depois mudar pra header
+    ) {
+        return eurecaService.buscarHistorico(matricula,token);
+    }
+
 
     /*
     * Métodos que faltam:
