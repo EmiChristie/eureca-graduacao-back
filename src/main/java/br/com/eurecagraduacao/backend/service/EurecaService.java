@@ -1,9 +1,6 @@
 package br.com.eurecagraduacao.backend.service;
 
-import br.com.eurecagraduacao.backend.dto.eureca.CourseHomeDTO;
-import br.com.eurecagraduacao.backend.dto.eureca.CurriculoDTO;
-import br.com.eurecagraduacao.backend.dto.eureca.DisciplinasCurriculoDTO;
-import br.com.eurecagraduacao.backend.dto.eureca.EquivalentSubjectCodeDTO;
+import br.com.eurecagraduacao.backend.dto.eureca.*;
 import br.com.eurecagraduacao.backend.model.eureca.*;
 import br.com.eurecagraduacao.backend.util.Constants;
 import org.springframework.core.ParameterizedTypeReference;
@@ -11,9 +8,13 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+
+import static br.com.eurecagraduacao.backend.util.Constants.periodoAte;
+import static br.com.eurecagraduacao.backend.util.Constants.periodoDe;
 
 @Service
 public class EurecaService {
@@ -26,12 +27,12 @@ public class EurecaService {
         this.restTemplate = new RestTemplate();
     }
 
-    public List<StudentModel> buscarEstudantesGraduadosOuEvadidosPorCurso(int codigoDoCurso) {
+    public List<StudentModel> buscarEstudantesGraduadosOuEvadidosPorCurso(Integer codigoDoCurso) {
 
         String url = baseUrl +
                 "/estudantes" +
-                "?periodo-de-evasao-de=2020.1" +
-                "&periodo-de-evasao-ate=2025.1" +
+                "?periodo-de-evasao-de=" + periodoDe+
+                "&periodo-de-evasao-ate=" + periodoAte+
                 "&pagina=1&tamanho=10" + //para fins de teste
                 "&curso=" + codigoDoCurso;
 
@@ -47,7 +48,7 @@ public class EurecaService {
         return response.getBody();
     }
 
-    public List<StudentModel> buscarEstudantesAtivosPorCurso(int codigoDoCurso) {
+    public List<StudentModel> buscarEstudantesAtivosPorCurso(Integer codigoDoCurso) {
         String url = baseUrl +
                 "/estudantes" +
                 "?situacao-do-estudante=ATIVOS" +
@@ -85,7 +86,7 @@ public class EurecaService {
                 .toList();
     }
 
-    public CourseModel buscarCursoEspecifico(int codigoDoCurso) {
+    public CourseModel buscarCursoEspecifico(Integer codigoDoCurso) {
         String url = baseUrl +
                 "/cursos" +
                 "?curso=" + codigoDoCurso;
@@ -102,7 +103,7 @@ public class EurecaService {
         return (cursos != null && !cursos.isEmpty()) ? cursos.get(0) : null;
     }
 
-    public Integer buscarCodigoDoCurriculoAtivoMaisRecente(int codigoDoCurso) {
+    public Integer buscarCodigoDoCurriculoAtivoMaisRecente(Integer codigoDoCurso) {
         String urlBuilder = baseUrl +
                 "/curriculos/codigos-curriculo"+
                 "?status=ATIVO" +
@@ -127,7 +128,7 @@ public class EurecaService {
         return codigos.get(0);
     }
 
-    public CurriculoDTO buscarCurriculo(int codigoDoCurso, int codigoDoCurriculo) {
+    public CurriculoDTO buscarCurriculo(Integer codigoDoCurso, Integer codigoDoCurriculo) {
         String url = baseUrl +
                 "/curriculos/curriculo" +
                 "?curso=" + codigoDoCurso +
@@ -145,7 +146,7 @@ public class EurecaService {
         return CurriculoDTO.fromModel(curriculo);
     }
 
-    public List<DisciplinasCurriculoDTO> buscarDisciplinas(int codigoDoCurso, int codigoDoCurriculo) {
+    public List<DisciplinasCurriculoDTO> buscarDisciplinas(Integer codigoDoCurso, Integer codigoDoCurriculo) {
         String curriculumRequestUrl = baseUrl+
                 "/curriculos/curriculo"+
                 "?curso="+codigoDoCurso+
@@ -217,4 +218,86 @@ public class EurecaService {
 
     }
 
+    public List<Integer> buscarDisciplinasObrigatorias(Integer codigoDoCurso, Integer codigoDoCurriculo,String periodoIdeal) {
+        String urlBuilder = baseUrl +
+                "/disciplinas-por-curriculo"+
+                "?tipo-da-disciplina=OBRIGATORIO" +
+                "&curso=" + codigoDoCurso+
+                "&curriculo=" + codigoDoCurriculo;
+
+        ResponseEntity<List<SubjectModel>> response = restTemplate.exchange(
+                urlBuilder,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                }
+        );
+
+        List<SubjectModel> disciplinas = response.getBody();
+
+        assert disciplinas != null;
+
+        List<Integer> codigosDisciplinas;
+
+        if(periodoIdeal != null){
+            codigosDisciplinas = disciplinas.stream()
+                    .filter(d -> d.getSemestreIdeal().equals(periodoIdeal))
+                    .map(SubjectModel::getCodigoDaDisciplina)
+                    .toList();
+        }else{
+            codigosDisciplinas = disciplinas.stream()
+                    .map(SubjectModel::getCodigoDaDisciplina)
+                    .toList();
+        }
+
+        return codigosDisciplinas;
+    }
+
+    public List<Integer> buscarDisciplinasOptativas(Integer codigoDoCurso, Integer codigoDoCurriculo) {
+        String urlBuilder = baseUrl +
+                "/disciplinas-por-curriculo"+
+                "?tipo-da-disciplina=OPCIONAL" +
+                "&curso=" + codigoDoCurso+
+                "&curriculo=" + codigoDoCurriculo;
+
+        ResponseEntity<List<SubjectModel>> response = restTemplate.exchange(
+                urlBuilder,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                }
+        );
+
+        List<SubjectModel> disciplinas = response.getBody();
+
+        assert disciplinas != null;
+
+        return disciplinas.stream()
+                    .map(SubjectModel::getCodigoDaDisciplina)
+                    .toList();
+    }
+
+    public List<EnrollmentDTO> buscarMatriculas(Integer codigoDoCurso, Integer codigoDaDisciplina) {
+        String url = baseUrl +
+                "/matriculas" +
+                "?periodo-de=" + periodoDe +
+                "&periodo-ate=" + periodoAte +
+                "&curso=" + codigoDoCurso +
+                "&disciplina=" + codigoDaDisciplina;
+
+        ResponseEntity<List<EnrollmentModel>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                }
+        );
+
+        List<EnrollmentModel> enrollmentModels = response.getBody();
+
+        assert enrollmentModels != null;
+        return enrollmentModels.stream()
+                .map(EnrollmentDTO::fromModel)
+                .toList();
+    }
 }
