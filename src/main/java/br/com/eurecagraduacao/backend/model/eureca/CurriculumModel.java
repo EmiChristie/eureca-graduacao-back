@@ -5,88 +5,88 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class CurriculumModel {
 
     @JsonProperty("codigo_do_curso")
-    private int codigoDoCurso;
+    private Integer codigoDoCurso;
 
     @JsonProperty("codigo_do_curriculo")
-    private int codigoDoCurriculo;
+    private Integer codigoDoCurriculo;
 
     @JsonProperty("regime")
-    private int regime;
+    private Integer regime;
 
     @JsonProperty("duracao_minima")
-    private int duracaoMinima;
+    private Integer duracaoMinima;
 
     @JsonProperty("duracao_maxima")
-    private int duracaoMaxima;
+    private Integer duracaoMaxima;
 
     @JsonProperty("duracao_media")
-    private int duracaoMedia;
+    private Integer duracaoMedia;
 
     @JsonProperty("carga_horaria_creditos_minima")
-    private int cargaHorariaCreditosMinima;
+    private Integer cargaHorariaCreditosMinima;
 
     @JsonProperty("carga_horaria_creditos_maxima")
-    private int cargaHorariaCreditosMaxima;
+    private Integer cargaHorariaCreditosMaxima;
 
     @JsonProperty("carga_horaria_disciplinas_obrigatorias_minima")
-    private int cargaHorariaObrigatoriasMinima;
+    private Integer cargaHorariaObrigatoriasMinima;
 
     @JsonProperty("carga_horaria_disciplinas_optativas_minima")
-    private int cargaHorariaOptativasMinima;
+    private Integer cargaHorariaOptativasMinima;
 
     @JsonProperty("carga_horaria_atividades_complementares_minima")
-    private int cargaHorariaAtividadesComplementaresMinima;
+    private Integer cargaHorariaAtividadesComplementaresMinima;
 
     @JsonProperty("carga_horaria_minima_total")
-    private int cargaHorariaMinimaTotal;
+    private Integer cargaHorariaMinimaTotal;
 
     @JsonProperty("minimo_creditos_disciplinas_obrigatorias")
-    private int minimoCreditosObrigatorias;
+    private Integer minimoCreditosObrigatorias;
 
     @JsonProperty("minimo_creditos_disciplinas_optativas")
-    private int minimoCreditosOptativas;
+    private Integer minimoCreditosOptativas;
 
     @JsonProperty("minimo_creditos_atividades_complementares")
-    private int minimoCreditosAtividadesComplementares;
+    private Integer minimoCreditosAtividadesComplementares;
 
     @JsonProperty("minimo_creditos_total")
-    private int minimoCreditosTotal;
+    private Integer minimoCreditosTotal;
 
     @JsonProperty("numero_disciplinas_obrigatorias_minimo")
-    private int numeroDisciplinasObrigatoriasMinimo;
+    private Integer numeroDisciplinasObrigatoriasMinimo;
 
     @JsonProperty("numero_disciplinas_optativas_minimo")
-    private int numeroDisciplinasOptativasMinimo;
+    private Integer numeroDisciplinasOptativasMinimo;
 
     @JsonProperty("numero_atividades_complementares_minimo")
-    private int numeroAtividadesComplementaresMinimo;
+    private Integer numeroAtividadesComplementaresMinimo;
 
     @JsonProperty("numero_disciplinas_minimo")
-    private int numeroDisciplinasMinimo;
+    private Integer numeroDisciplinasMinimo;
 
     @JsonProperty("numero_interrupcoes_matricula_maximo")
-    private int interrupcoesMatriculaMaximo;
+    private Integer interrupcoesMatriculaMaximo;
 
     @JsonProperty("numero_interrupcoes_periodo_maximo")
-    private int interrupcoesPeriodoMaximo;
+    private Integer interrupcoesPeriodoMaximo;
 
     @JsonProperty("numero_matriculas_institucionais_maximo")
-    private int matriculasInstitucionaisMaximo;
+    private Integer matriculasInstitucionaisMaximo;
 
     @JsonProperty("numero_matriculas_extensao_maximo")
-    private int matriculasExtensaoMaximo;
+    private Integer matriculasExtensaoMaximo;
 
     @JsonProperty("carga_horaria_extensao")
-    private int cargaHorariaExtensao;
+    private Integer cargaHorariaExtensao;
 
     @JsonProperty("disciplina_atividades_complementares_flexiveis")
-    private int disciplinaAtividadesComplementaresFlexiveis;
+    private Integer disciplinaAtividadesComplementaresFlexiveis;
 
     @JsonProperty("disciplina_atividades_complementares_extensao")
-    private int disciplinaAtividadesComplementaresExtensao;
+    private Integer disciplinaAtividadesComplementaresExtensao;
 
     @JsonProperty("periodo_inicio")
-    private int periodoInicio;
+    private Integer periodoInicio;
 
     public Integer getCodigoDoCurriculo() {
         return this.codigoDoCurriculo;

@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class CourseModel {
 
     @JsonProperty("codigo_do_curso")
-    private int codigoDoCurso;
+    private Integer codigoDoCurso;
 
     @JsonProperty("descricao")
     private String descricao;
@@ -17,13 +17,13 @@ public class CourseModel {
     private String grauDoCurso;
 
     @JsonProperty("codigo_do_setor")
-    private int codigoDoSetor;
+    private Integer codigoDoSetor;
 
     @JsonProperty("nome_do_setor")
     private String nomeDoSetor;
 
     @JsonProperty("campus")
-    private int campus;
+    private Integer campus;
 
     @JsonProperty("nome_do_campus")
     private String nomeDoCampus;
@@ -38,17 +38,83 @@ public class CourseModel {
     private String dataDeFuncionamento;
 
     @JsonProperty("codigo_inep")
-    private int codigoInep;
+    private Integer codigoInep;
 
     @JsonProperty("modalidade_academica")
     private String modalidadeAcademica;
 
     @JsonProperty("curriculo_atual")
-    private int curriculoAtual;
+    private Integer curriculoAtual;
 
     @JsonProperty("area_de_retencao")
-    private int areaDeRetencao;
+    private Integer areaDeRetencao;
 
     @JsonProperty("ciclo_enade")
-    private int cicloEnade;
+    private Integer cicloEnade;
+
+    // Getters
+
+    public Integer getCodigoDoCurso() {
+        return codigoDoCurso;
+    }
+
+    public String getDescricao() {
+        return descricao;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getGrauDoCurso() {
+        return grauDoCurso;
+    }
+
+    public Integer getCodigoDoSetor() {
+        return codigoDoSetor;
+    }
+
+    public String getNomeDoSetor() {
+        return nomeDoSetor;
+    }
+
+    public Integer getCampus() {
+        return campus;
+    }
+
+    public String getNomeDoCampus() {
+        return nomeDoCampus;
+    }
+
+    public String getTurno() {
+        return turno;
+    }
+
+    public String getPeriodoDeInicio() {
+        return periodoDeInicio;
+    }
+
+    public String getDataDeFuncionamento() {
+        return dataDeFuncionamento;
+    }
+
+    public Integer getCodigoInep() {
+        return codigoInep;
+    }
+
+    public String getModalidadeAcademica() {
+        return modalidadeAcademica;
+    }
+
+    public Integer getCurriculoAtual() {
+        return curriculoAtual;
+    }
+
+    public Integer getAreaDeRetencao() {
+        return areaDeRetencao;
+    }
+
+    public Integer getCicloEnade() {
+        return cicloEnade;
+    }
 }

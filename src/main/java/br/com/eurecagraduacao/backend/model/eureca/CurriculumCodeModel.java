@@ -5,13 +5,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class CurriculumCodeModel {
 
     @JsonProperty("codigo_do_curriculo")
-    private int codigoDoCurriculo;
+    private Integer codigoDoCurriculo;
 
-    public int getCodigoDoCurriculo() {
+    public Integer getCodigoDoCurriculo() {
         return codigoDoCurriculo;
     }
 
-    public void setCodigoDoCurriculo(int codigoDoCurriculo) {
+    public void setCodigoDoCurriculo(Integer codigoDoCurriculo) {
         this.codigoDoCurriculo = codigoDoCurriculo;
     }
 }

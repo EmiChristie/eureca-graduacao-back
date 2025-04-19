@@ -5,49 +5,49 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class CurriculumEquivalentSubjectModel {
 
     @JsonProperty("codigo_da_disciplina")
-    private int codigo;
+    private Integer codigo;
 
     @JsonProperty("nome")
     private String nome;
 
     @JsonProperty("carga_horaria_teorica_semanal")
-    private int teoricaSemanal;
+    private Integer teoricaSemanal;
 
     @JsonProperty("carga_horaria_pratica_semanal")
-    private int praticaSemanal;
+    private Integer praticaSemanal;
 
     @JsonProperty("quantidade_de_creditos")
-    private int creditos;
+    private Integer creditos;
 
     @JsonProperty("horas_totais")
-    private int horasTotais;
+    private Integer horasTotais;
 
     @JsonProperty("media_de_aprovacao")
-    private int mediaAprovacao;
+    private Integer mediaAprovacao;
 
     @JsonProperty("carga_horaria_teorica_minima")
-    private int teoricaMinima;
+    private Integer teoricaMinima;
 
     @JsonProperty("carga_horaria_pratica_minima")
-    private int praticaMinima;
+    private Integer praticaMinima;
 
     @JsonProperty("carga_horaria_teorica_maxima")
-    private int teoricaMaxima;
+    private Integer teoricaMaxima;
 
     @JsonProperty("carga_horaria_pratica_maxima")
-    private int praticaMaxima;
+    private Integer praticaMaxima;
 
     @JsonProperty("numero_de_semanas")
-    private int numeroSemanas;
+    private Integer numeroSemanas;
 
     @JsonProperty("codigo_do_setor")
-    private int codigoSetor;
+    private Integer codigoSetor;
 
     @JsonProperty("nome_do_setor")
     private String nomeDoSetor;
 
     @JsonProperty("campus")
-    private int campus;
+    private Integer campus;
 
     @JsonProperty("nome_do_campus")
     private String nomeDoCampus;
@@ -62,7 +62,86 @@ public class CurriculumEquivalentSubjectModel {
     private String tipoComponente;
 
     @JsonProperty("carga_horaria_extensao")
-    private int cargaHorariaExtensao;
+    private Integer cargaHorariaExtensao;
 
-    // Getters e setters omitidos por brevidade
+    // Getters
+    public Integer getCodigo() {
+        return codigo;
+    }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public Integer getTeoricaSemanal() {
+        return teoricaSemanal;
+    }
+
+    public Integer getPraticaSemanal() {
+        return praticaSemanal;
+    }
+
+    public Integer getCreditos() {
+        return creditos;
+    }
+
+    public Integer getHorasTotais() {
+        return horasTotais;
+    }
+
+    public Integer getMediaAprovacao() {
+        return mediaAprovacao;
+    }
+
+    public Integer getTeoricaMinima() {
+        return teoricaMinima;
+    }
+
+    public Integer getPraticaMinima() {
+        return praticaMinima;
+    }
+
+    public Integer getTeoricaMaxima() {
+        return teoricaMaxima;
+    }
+
+    public Integer getPraticaMaxima() {
+        return praticaMaxima;
+    }
+
+    public Integer getNumeroSemanas() {
+        return numeroSemanas;
+    }
+
+    public Integer getCodigoSetor() {
+        return codigoSetor;
+    }
+
+    public String getNomeDoSetor() {
+        return nomeDoSetor;
+    }
+
+    public Integer getCampus() {
+        return campus;
+    }
+
+    public String getNomeDoCampus() {
+        return nomeDoCampus;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public String getContabilizaCreditos() {
+        return contabilizaCreditos;
+    }
+
+    public String getTipoComponente() {
+        return tipoComponente;
+    }
+
+    public Integer getCargaHorariaExtensao() {
+        return cargaHorariaExtensao;
+    }
 }

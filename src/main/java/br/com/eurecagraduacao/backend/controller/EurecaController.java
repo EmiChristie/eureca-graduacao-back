@@ -1,7 +1,9 @@
 package br.com.eurecagraduacao.backend.controller;
 
+import br.com.eurecagraduacao.backend.dto.eureca.CourseHomeDTO;
+import br.com.eurecagraduacao.backend.dto.eureca.CurriculoDTO;
+import br.com.eurecagraduacao.backend.dto.eureca.DisciplinasCurriculoDTO;
 import br.com.eurecagraduacao.backend.model.eureca.CourseModel;
-import br.com.eurecagraduacao.backend.model.eureca.CurriculumModel;
 import br.com.eurecagraduacao.backend.model.eureca.FullCurriculumModel;
 import br.com.eurecagraduacao.backend.model.eureca.StudentModel;
 import br.com.eurecagraduacao.backend.service.EurecaService;
@@ -30,7 +32,7 @@ public class EurecaController {
     }
 
     @GetMapping("/cursos")
-    public List<CourseModel> getCursosAtivos() {
+    public List<CourseHomeDTO> getCursosAtivos() {
         return eurecaService.buscarCursosAtivos();
     }
 
@@ -45,19 +47,25 @@ public class EurecaController {
     }
 
     @GetMapping("/curriculo")
-    public FullCurriculumModel getCurriculo(
+    public CurriculoDTO getCurriculo(
             @RequestParam("curso") int codigoDoCurso,
             @RequestParam("curriculo") int codigoDoCurriculo
     ) {
         return eurecaService.buscarCurriculo(codigoDoCurso,codigoDoCurriculo);
     }
 
+    @GetMapping("/disciplinas-de-um-curriculo")
+    public List<DisciplinasCurriculoDTO> getDisciplinas(
+            @RequestParam("curso") int codigoDoCurso,
+            @RequestParam("curriculo") int codigoDoCurriculo
+    ) {
+        return eurecaService.buscarDisciplinas(codigoDoCurso,codigoDoCurriculo);
+    }
+
     /*
     * Métodos que faltam:
-    * Pegar informações das disciplinas de um currículo (ex.: período ideal)
     * Pegar informações das matrículas em disciplinas (para calcular disciplinas que mais reprovam)
     * Pegar informações particulares do estudante que estiver logado
-    *
     * */
 
 }

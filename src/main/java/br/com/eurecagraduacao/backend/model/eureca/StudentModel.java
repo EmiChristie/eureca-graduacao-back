@@ -13,7 +13,7 @@ public class StudentModel {
     private String nome;
 
     @JsonProperty("codigo_do_curso")
-    private int codigoDoCurso;
+    private Integer codigoDoCurso;
 
     @JsonProperty("nome_do_curso")
     private String nomeDoCurso;
@@ -22,16 +22,16 @@ public class StudentModel {
     private String turnoDoCurso;
 
     @JsonProperty("codigo_do_curriculo")
-    private int codigoDoCurriculo;
+    private Integer codigoDoCurriculo;
 
     @JsonProperty("campus")
-    private int campus;
+    private Integer campus;
 
     @JsonProperty("nome_do_campus")
     private String nomeDoCampus;
 
     @JsonProperty("codigo_do_setor")
-    private int codigoDoSetor;
+    private Integer codigoDoSetor;
 
     @JsonProperty("nome_do_setor")
     private String nomeDoSetor;
@@ -91,7 +91,7 @@ public class StudentModel {
     private List<String> deficiencias;
 
     @JsonProperty("ano_de_conclusao_ensino_medio")
-    private int anoDeConclusaoEnsinoMedio;
+    private Integer anoDeConclusaoEnsinoMedio;
 
     @JsonProperty("tipo_de_ensino_medio")
     private String tipoDeEnsinoMedio;
@@ -121,31 +121,31 @@ public class StudentModel {
     private double iean;
 
     @JsonProperty("creditos_do_cra")
-    private int creditosDoCra;
+    private Integer creditosDoCra;
 
     @JsonProperty("notas_acumuladas")
     private double notasAcumuladas;
 
     @JsonProperty("periodos_completados")
-    private int periodosCompletados;
+    private Integer periodosCompletados;
 
     @JsonProperty("creditos_tentados")
-    private int creditosTentados;
+    private Integer creditosTentados;
 
     @JsonProperty("creditos_completados")
-    private int creditosCompletados;
+    private Integer creditosCompletados;
 
     @JsonProperty("creditos_isentos")
-    private int creditosIsentos;
+    private Integer creditosIsentos;
 
     @JsonProperty("creditos_falhados")
-    private int creditosFalhados;
+    private Integer creditosFalhados;
 
     @JsonProperty("creditos_suspensos")
-    private int creditosSuspensos;
+    private Integer creditosSuspensos;
 
     @JsonProperty("creditos_em_andamento")
-    private int creditosEmAndamento;
+    private Integer creditosEmAndamento;
 
     @JsonProperty("velocidade_media")
     private double velocidadeMedia;
@@ -181,6 +181,5 @@ public class StudentModel {
     private String pracDeslocouMudou;
 
     @JsonProperty("ufpb")
-    private int ufpb;
-
+    private Integer ufpb;
 }
