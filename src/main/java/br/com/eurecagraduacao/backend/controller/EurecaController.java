@@ -118,10 +118,4 @@ public class EurecaController {
         return eurecaService.buscarHistorico(matricula,token);
     }
 
-
-    /*
-    * Métodos que faltam:
-    * Pegar informações particulares do estudante que estiver logado
-    * */
-
 }
