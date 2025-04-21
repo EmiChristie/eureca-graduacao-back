@@ -92,7 +92,10 @@ public class EurecaService {
 
         assert cursos != null;
         return cursos.stream()
-                .map(CourseHomeDTO::fromModel)
+                .map(curso -> {
+                    Integer codigoCurriculo = buscarCodigoDoCurriculoAtivoMaisRecente(curso.getCodigoDoCurso());
+                    return CourseHomeDTO.fromModel(curso, codigoCurriculo);
+                })
                 .toList();
     }
 
@@ -114,28 +117,33 @@ public class EurecaService {
     }
 
     public Integer buscarCodigoDoCurriculoAtivoMaisRecente(Integer codigoDoCurso) {
-        String urlBuilder = baseUrl +
-                "/curriculos/codigos-curriculo"+
-                "?status=ATIVO" +
-                "&curso=" + codigoDoCurso;
+        try {
+            String urlBuilder = baseUrl +
+                    "/curriculos/codigos-curriculo" +
+                    "?status=ATIVO" +
+                    "&curso=" + codigoDoCurso;
 
-        ResponseEntity<List<CurriculumCodeModel>> response = restTemplate.exchange(
-                urlBuilder,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<>() {
-                }
-        );
+            ResponseEntity<List<CurriculumCodeModel>> response = restTemplate.exchange(
+                    urlBuilder,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<>() {
+                    }
+            );
 
-        List<CurriculumCodeModel> curriculos = response.getBody();
+            List<CurriculumCodeModel> curriculos = response.getBody();
 
-        assert curriculos != null;
-        List<Integer> codigos = curriculos.stream()
-                .map(CurriculumCodeModel::getCodigoDoCurriculo)
-                .sorted(Comparator.reverseOrder())
-                .toList();
+            if (curriculos == null || curriculos.isEmpty()) {
+                return null;
+            }
 
-        return codigos.get(0);
+            return curriculos.stream()
+                    .map(CurriculumCodeModel::getCodigoDoCurriculo)
+                    .max(Comparator.naturalOrder())
+                    .orElse(null);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public CurriculoDTO buscarCurriculo(Integer codigoDoCurso, Integer codigoDoCurriculo) {

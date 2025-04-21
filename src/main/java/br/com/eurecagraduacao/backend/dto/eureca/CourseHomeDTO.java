@@ -23,22 +23,27 @@ public class CourseHomeDTO {
     @JsonProperty("area_de_retencao_descricao")
     private String areaDeRetencaoDesc;
 
-    public CourseHomeDTO(Integer codigoDoCurso, String descricao, Integer campus, String nomeDoCampus, Integer areaDeRetencao) {
+    @JsonProperty("codigo_do_curriculo")
+    private Integer curriculo;
+
+    public CourseHomeDTO(Integer codigoDoCurso, String descricao, Integer campus, String nomeDoCampus, Integer areaDeRetencao, Integer curriculo) {
         this.codigoDoCurso = codigoDoCurso;
         this.descricao = descricao;
         this.campus = campus;
         this.nomeDoCampus = nomeDoCampus;
         this.areaDeRetencao = areaDeRetencao;
         this.areaDeRetencaoDesc = mapArea(areaDeRetencao);
+        this.curriculo = curriculo;
     }
 
-    public static CourseHomeDTO fromModel(CourseModel model) {
+    public static CourseHomeDTO fromModel(CourseModel model, Integer curriculo) {
         return new CourseHomeDTO(
                 model.getCodigoDoCurso(),
                 model.getDescricao(),
                 model.getCampus(),
                 model.getNomeDoCampus(),
-                model.getAreaDeRetencao()
+                model.getAreaDeRetencao(),
+                curriculo
         );
     }
 
@@ -80,6 +85,7 @@ public class CourseHomeDTO {
                 ", nomeDoCampus='" + nomeDoCampus + '\'' +
                 ", areaDeRetencao=" + areaDeRetencao +
                 ", areaDeRetencaoDesc='" + areaDeRetencaoDesc + '\'' +
+                ", curriculo='" + curriculo + '\'' +
                 '}';
     }
 }
