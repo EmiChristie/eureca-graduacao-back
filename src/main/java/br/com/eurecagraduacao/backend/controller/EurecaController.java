@@ -96,7 +96,7 @@ public class EurecaController {
     @GetMapping("/user-info")
     public OwnProfileDTO getStudentInfo(
             @RequestParam("matricula") String matricula,
-            @RequestParam("token") String token //depois mudar pra header
+            @RequestHeader("token") String token
     ) {
         return eurecaService.buscarUserInfo(matricula,token);
     }
@@ -104,7 +104,7 @@ public class EurecaController {
     @GetMapping("/user-metrics")
     public List<MetricsHistoryModel> getStudentMetrics(
             @RequestParam("matricula") String matricula,
-            @RequestParam("token") String token //depois mudar pra header
+            @RequestHeader("token") String token
     ) {
         return eurecaService.buscarMetricas(matricula,token);
     }
@@ -113,7 +113,7 @@ public class EurecaController {
     @GetMapping("/user-history")
     public List<EnrollmentHistoryModel> getStudentHistory(
             @RequestParam("matricula") String matricula,
-            @RequestParam("token") String token //depois mudar pra header
+            @RequestHeader("token") String token
     ) {
         return eurecaService.buscarHistorico(matricula,token);
     }
