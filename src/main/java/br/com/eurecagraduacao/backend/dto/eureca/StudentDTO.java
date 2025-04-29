@@ -115,4 +115,8 @@ public class StudentDTO {
         dto.periodoDeIngresso = model.getPeriodoDeIngresso();
         return dto;
     }
+
+    public String getMotivoDeEvasao() {
+        return motivoDeEvasao;
+    }
 }

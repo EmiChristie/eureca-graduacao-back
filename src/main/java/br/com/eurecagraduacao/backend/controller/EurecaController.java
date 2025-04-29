@@ -72,7 +72,7 @@ public class EurecaController {
     public List<Integer> getDisciplinasObrigatorias(
             @RequestParam("curso") Integer codigoDoCurso,
             @RequestParam("curriculo") Integer codigoDoCurriculo,
-            @RequestParam(name = "periodo", required = false) String periodoIdeal
+            @RequestParam(name = "periodoIdeal", required = false) String periodoIdeal
     ) {
         return eurecaService.buscarDisciplinasObrigatorias(codigoDoCurso,codigoDoCurriculo,periodoIdeal);
     }

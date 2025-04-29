@@ -6,6 +6,7 @@ import br.com.eurecagraduacao.backend.util.Constants;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Comparator;
@@ -27,7 +28,6 @@ public class EurecaService {
     }
 
     public List<StudentDTO> buscarEstudantesGraduadosOuEvadidosPorCurso(Integer codigoDoCurso) {
-
         String url = baseUrl +
                 "/estudantes" +
                 "?periodo-de-evasao-de=" + periodoDe +
@@ -35,21 +35,28 @@ public class EurecaService {
                 "&pagina=1&tamanho=10" + // para fins de teste
                 "&curso=" + codigoDoCurso;
 
-        ResponseEntity<List<StudentModel>> response = restTemplate.exchange(
-                url,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<>() {
-                }
-        );
+        try {
+            ResponseEntity<List<StudentModel>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<>() {}
+            );
 
-        List<StudentModel> estudantes = response.getBody();
+            List<StudentModel> estudantes = response.getBody();
+            if (estudantes == null) {
+                return List.of();
+            }
 
-        if (estudantes == null) {
-            return List.of();
+            return estudantes.stream().map(StudentDTO::fromModel).toList();
+
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode().value() == 404) {
+                return List.of(); // retorna vazio se não houver estudantes
+            } else {
+                throw e; // propaga outros erros
+            }
         }
-
-        return estudantes.stream().map(StudentDTO::fromModel).toList();
     }
 
     public List<StudentDTO> buscarEstudantesAtivosPorCurso(Integer codigoDoCurso) {
