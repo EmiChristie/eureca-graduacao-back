@@ -1,7 +1,6 @@
 package br.com.eurecagraduacao.backend.service;
 
-import br.com.eurecagraduacao.backend.dto.backend.DisciplinaReprovacaoDTO;
-import br.com.eurecagraduacao.backend.dto.backend.TaxaSucessoDTO;
+import br.com.eurecagraduacao.backend.dto.backend.*;
 import br.com.eurecagraduacao.backend.dto.eureca.StudentDTO;
 import br.com.eurecagraduacao.backend.model.eureca.EnrollmentModel;
 import br.com.eurecagraduacao.backend.model.eureca.StudentModel;
@@ -103,7 +102,7 @@ public class MetricasCursoService {
                 .collect(Collectors.toList());
     }
 
-    public TaxaSucessoDTO getTaxaDeSucesso(Integer codigoDoCurso) {
+    public TaxaSucessoDTO getTaxaDeSucessoSimples(Integer codigoDoCurso) {
         List<StudentDTO> estudantes = buscarEstudantesGraduadosOuEvadidosPorCurso(codigoDoCurso);
 
         int graduados = 0;
@@ -143,7 +142,7 @@ public class MetricasCursoService {
                 "/estudantes" +
                 "?periodo-de-evasao-de=" + periodoDe +
                 "&periodo-de-evasao-ate=" + periodoAte +
-                "&pagina=1&tamanho=10" + // para fins de teste
+                //"&pagina=1&tamanho=10" + // para fins de teste
                 "&curso=" + codigoDoCurso;
 
         try {
@@ -168,5 +167,103 @@ public class MetricasCursoService {
                 throw e;
             }
         }
+    }
+
+
+    public MetricasCursoDTO getMetricasDeSucessoCompletas(Integer codigoDoCurso) {
+        List<StudentDTO> estudantes = buscarEstudantesGraduadosOuEvadidosPorCurso(codigoDoCurso);
+        List<StudentDTO> graduados = estudantes.stream().filter(e->e.getMotivoDeEvasao().equals("GRADUADO")).toList();
+        List<StudentDTO> evadidos = estudantes.stream().filter(e->!(e.getMotivoDeEvasao().equals("GRADUADO"))).toList();
+
+        int qtdTotal = estudantes.size();
+
+        double taxaDeSucesso = qtdTotal > 0
+                ? BigDecimal.valueOf((double) graduados.size() / qtdTotal)
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue()
+                : 0.0;
+
+        int qtdMulheresGraduadas = graduados.stream().filter(e->e.getSexo().equals("FEMININO")).toArray().length;
+
+        double pctMulheresGraduadas = !graduados.isEmpty()
+                ? BigDecimal.valueOf((double) qtdMulheresGraduadas / graduados.size())
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue()
+                : 0.0;
+
+        List<MotivoDeEvasaoDTO> motivosDeEvasaoMaisComuns = getMotivosDeEvasaoMaisComuns(evadidos,3);
+
+        List<QuantidadeRealPeriodosDTO> quantidadeRealPeriodos = calculaQuantidadeRealPeriodos(graduados);
+
+        return new MetricasCursoDTO(
+                codigoDoCurso,
+                taxaDeSucesso,
+                graduados.size(),
+                evadidos.size(),
+                qtdMulheresGraduadas,
+                pctMulheresGraduadas,
+                motivosDeEvasaoMaisComuns,
+                quantidadeRealPeriodos);
+    }
+
+    private List<QuantidadeRealPeriodosDTO> calculaQuantidadeRealPeriodos(List<StudentDTO> graduados) {
+        int totalGraduados = graduados.size();
+
+        if (totalGraduados == 0) {
+            return List.of();
+        }
+
+        Map<Integer, Long> contagemPorPeriodo = graduados.stream()
+                .filter(s -> s.getPeriodosCompletados() != null)
+                .collect(Collectors.groupingBy(
+                        StudentDTO::getPeriodosCompletados,
+                        Collectors.counting()
+                ));
+
+        return contagemPorPeriodo.entrySet().stream()
+                .map(entry -> {
+                    int quantidadeDePeriodos = entry.getKey();
+                    long quantidadeGraduados = entry.getValue();
+                    double porcentagem = (double) quantidadeGraduados / totalGraduados * 100;
+
+                    QuantidadeRealPeriodosDTO dto = new QuantidadeRealPeriodosDTO();
+                    dto.setQuantidadeDePeriodos(quantidadeDePeriodos);
+                    dto.setPorcentagemDeGraduados(
+                            BigDecimal.valueOf(porcentagem).setScale(2, RoundingMode.HALF_UP).doubleValue()
+                    );
+                    return dto;
+                })
+                .sorted(Comparator.comparing(QuantidadeRealPeriodosDTO::getPorcentagemDeGraduados).reversed())
+                .toList();
+    }
+
+
+    private List<MotivoDeEvasaoDTO> getMotivosDeEvasaoMaisComuns(List<StudentDTO> evadidos, int qtd) {
+        int totalEvadidos = evadidos.size();
+
+        if (totalEvadidos == 0) {
+            return List.of();
+        }
+
+        Map<String, Long> contagemMotivos = evadidos.stream()
+                .filter(e -> e.getMotivoDeEvasao() != null && !e.getMotivoDeEvasao().isBlank())
+                .collect(Collectors.groupingBy(
+                        StudentDTO::getMotivoDeEvasao,
+                        Collectors.counting()
+                ));
+
+        return contagemMotivos.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue().reversed())
+                .limit(qtd)
+                .map(entry -> {
+                    MotivoDeEvasaoDTO dto = new MotivoDeEvasaoDTO();
+                    dto.setMotivo(entry.getKey());
+                    double porcentagem = (double) entry.getValue() / totalEvadidos * 100;
+                    dto.setPorcentagemEvadidos(
+                            BigDecimal.valueOf(porcentagem).setScale(2, RoundingMode.HALF_UP).doubleValue()
+                    );
+                    return dto;
+                })
+                .toList();
     }
 }

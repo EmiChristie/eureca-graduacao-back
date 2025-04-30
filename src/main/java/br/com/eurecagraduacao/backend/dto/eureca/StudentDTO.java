@@ -119,4 +119,16 @@ public class StudentDTO {
     public String getMotivoDeEvasao() {
         return motivoDeEvasao;
     }
+
+    public String getSexo() {
+        return sexo;
+    }
+
+    public String getPeriodoDeEvasao(){
+        return periodoDeEvasao;
+    }
+
+    public Integer getPeriodosCompletados(){
+        return periodosCompletados;
+    }
 }
