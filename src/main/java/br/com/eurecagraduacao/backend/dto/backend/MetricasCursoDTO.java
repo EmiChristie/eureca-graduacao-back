@@ -30,24 +30,7 @@ public class MetricasCursoDTO {
     @JsonProperty("quantidade_real_periodos")
     private List<QuantidadeRealPeriodosDTO> quantidadeRealPeriodos;
 
-    public MetricasCursoDTO(Integer codigoDoCurso, double taxaDeSucesso, int size, int size1, int qtdMulheresGraduadas, double pctMulheresGraduadas, List<MotivoDeEvasaoDTO> motivosDeEvasaoMaisComuns, List<QuantidadeRealPeriodosDTO> quantidadeRealPeriodos) {
-        this.codigoDoCurso = codigoDoCurso;
-        this.taxaDeSucesso = taxaDeSucesso;
-        this.quantidadeDeGraduados = size;
-        this.quantidadeDeEvadidos = size1;
-        this.quantidadeMulheresGraduadas = qtdMulheresGraduadas;
-        this.pctMulheresGraduadas = pctMulheresGraduadas;
-        this.motivoDeEvasaoMaisComum = motivosDeEvasaoMaisComuns;
-        this.quantidadeRealPeriodos = quantidadeRealPeriodos;
-
-    }
-
-    /*
-
-    @JsonProperty("quantidade_real_creditos")
-    private QuantidadeRealCreditosDTO quantidadeRealCreditos;
-
-    @JsonProperty("graduadosEevadidosPorPeriodo")
+    @JsonProperty("graduados_e_evadidos_por_periodo")
     private List<GraduadosEEvadidosPorPeriodoDTO> graduadosEevadidosPorPeriodo;
 
     @JsonProperty("qtd_media_graduados_por_periodo")
@@ -58,6 +41,13 @@ public class MetricasCursoDTO {
 
     @JsonProperty("periodo_mais_comum_de_evadir")
     private Integer periodoMaisComumDeEvadir;
+
+    @JsonProperty("qtd_media_creditos_reprovados")
+    private double qtdMediaCreditosReprovados;
+
+    /*
+    @JsonProperty("quantidade_real_creditos")
+    private QuantidadeRealCreditosDTO quantidadeRealCreditos;
 
     @JsonProperty("media_de_metricas")
     private MediaDeMetricasDTO mediaDeMetricas;
@@ -77,9 +67,6 @@ public class MetricasCursoDTO {
     @JsonProperty("porcentagem_graduados_que_ultrapassaram_o_max_periodos")
     private double porcentagemGraduadosMaxPeriodos;
 
-    @JsonProperty("qtd_media_creditos_reprovados")
-    private double qtdMediaCreditosReprovados;
-
     @JsonProperty("velocidade_media_curso")
     private double velocidadeMediaCurso;
 
@@ -90,10 +77,26 @@ public class MetricasCursoDTO {
     private Integer quantidadeDeAtivos;
 
     */
+
+    public MetricasCursoDTO(Integer codigoDoCurso, double taxaDeSucesso, int size, int size1, int qtdMulheresGraduadas, double pctMulheresGraduadas, List<MotivoDeEvasaoDTO> motivosDeEvasaoMaisComuns, List<QuantidadeRealPeriodosDTO> quantidadeRealPeriodos, List<GraduadosEEvadidosPorPeriodoDTO> graduadosEEvadidosPorPeriodo, int qtdMediaGraduadosPeriodo, int qtdMediaEvadidosPeriodo, int periodoMaisComumDeEvadir, int qtdMediaCreditosReprovados) {
+        this.codigoDoCurso = codigoDoCurso;
+        this.taxaDeSucesso = taxaDeSucesso;
+        this.quantidadeDeGraduados = size;
+        this.quantidadeDeEvadidos = size1;
+        this.quantidadeMulheresGraduadas = qtdMulheresGraduadas;
+        this.pctMulheresGraduadas = pctMulheresGraduadas;
+        this.motivoDeEvasaoMaisComum = motivosDeEvasaoMaisComuns;
+        this.quantidadeRealPeriodos = quantidadeRealPeriodos;
+        this.graduadosEevadidosPorPeriodo = graduadosEEvadidosPorPeriodo;
+        this.qtdMediaGraduadosPorPeriodo = qtdMediaGraduadosPeriodo;
+        this.qtdMediaEvadidosPorPeriodo = qtdMediaEvadidosPeriodo;
+        this.periodoMaisComumDeEvadir = periodoMaisComumDeEvadir;
+        this.qtdMediaCreditosReprovados = qtdMediaCreditosReprovados;
+    }
 }
 
 /*
-* {
+{
 	"codigo_do_curso": 0,
 	"taxa_de_sucesso": 0.0,
 	"quantidade_de_graduados": 0,
@@ -106,18 +109,17 @@ public class MetricasCursoDTO {
 			"porcentagem_evadidos": 0.0,
 		},
 	],
+
+//metrica que depende mais ou menos do currículo ativo que estou observando:
+
 	"quantidade_real_periodos": [
 		{
 			"quantidade_de_periodos": 0,
+			"quantidade_de_graduados": 0,
 			"porcentagem_de_graduados": 0.0,
 		},
 	],
-	"quantidade_real_creditos": {
-		"quantidade_media_creditos": 0,
-		"quantidade_a_mais_que_o_minimo": 0,
-		"porcentagem_a_mais_que_o_minimo": 0.0,
-	},
-	"graduadosEevadidosPorPeriodo": [
+	"graduados_e_evadidos_por_periodo": [
 		{
 			"quantidade_graduados_periodo": 0,
 			"quantidade_evadidos_periodo": 0,
@@ -128,6 +130,24 @@ public class MetricasCursoDTO {
 	"qtd_media_graduados_por_periodo": 0,
 	"qtd_media_evadidos_por_periodo": 0,
 	"periodo_mais_comum_de_evadir": 0,
+	"qtd_media_creditos_reprovados": 0,
+
+//fiz ate aqui -----------------------------------------------------------------------------------------------------------
+
+
+//metricas que exclusivamente dependem do currículo que estou observando:
+
+	"quantidade_real_creditos": {
+		"quantidade_media_creditos": 0,
+		"quantidade_a_mais_que_o_minimo": 0,
+		"porcentagem_a_mais_que_o_minimo": 0.0,
+	},
+	"porcentagem_graduados_que_se_formam_com_o_minimo_de_creditos": 0.0,
+	"porcentagem_graduados_que_se_formam_com_o_minimo_de_periodos": 0.0,
+	"porcentagem_graduados_que_ultrapassaram_o_max_periodos": 0.0,
+
+//metricas que usam os alunos ativos ou outros grupos fora dos graduados/evadidos dos últimos 5 anos (objeto que eu já usava pra calcular as métricas anteriores):
+
 	"media_de_metricas": {
     		"cra": 0,
     		"mc": 0,
@@ -137,16 +157,10 @@ public class MetricasCursoDTO {
     		"mcn": 0,
     		"iean": 0,
 	},
-	"porcentagem_graduados_que_se_formam_com_o_minimo_de_creditos": 0.0,
-	"porcentagem_graduados_que_se_formam_com_o_minimo_de_periodos": 0.0,
-	"porcentagem_graduados_que_ultrapassaram_o_max_periodos": 0.0,
-	"qtd_media_creditos_reprovados": 0,
-	"velocidade_media_curso": 0,
-
-
 	"maior_cra_ativo": 0.0,
 	"menor_cra_ativo": 0.0,
 	"qtd_media_ingressantes_por_periodo": 0,
 	"quantidade_de_ativos": 0,
+	"velocidade_media_curso": 0,
 }
 * */

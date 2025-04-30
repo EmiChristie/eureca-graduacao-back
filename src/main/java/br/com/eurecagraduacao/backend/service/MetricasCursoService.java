@@ -142,7 +142,7 @@ public class MetricasCursoService {
                 "/estudantes" +
                 "?periodo-de-evasao-de=" + periodoDe +
                 "&periodo-de-evasao-ate=" + periodoAte +
-                //"&pagina=1&tamanho=10" + // para fins de teste
+                "&pagina=1&tamanho=10" + // para fins de teste
                 "&curso=" + codigoDoCurso;
 
         try {
@@ -195,6 +195,24 @@ public class MetricasCursoService {
 
         List<QuantidadeRealPeriodosDTO> quantidadeRealPeriodos = calculaQuantidadeRealPeriodos(graduados);
 
+        List<GraduadosEEvadidosPorPeriodoDTO> graduadosEEvadidosPorPeriodo = calculaGraduadosEEvadidosPorPeriodo(estudantes);
+
+        int qtdMediaGraduadosPeriodo = !graduados.isEmpty()
+                ? (int) BigDecimal.valueOf(graduados.size() / graduadosEEvadidosPorPeriodo.size())
+                .setScale(0, RoundingMode.FLOOR)
+                .doubleValue()
+                : 0;
+
+        int qtdMediaEvadidosPeriodo = !evadidos.isEmpty()
+                ? (int) BigDecimal.valueOf(evadidos.size() / graduadosEEvadidosPorPeriodo.size())
+                .setScale(0, RoundingMode.FLOOR)
+                .doubleValue()
+                : 0;
+
+        int periodoMaisComumDeEvadir = calculaPeriodoMaisComumDeEvadir(evadidos)+1;
+        
+        int qtdMediaCreditosReprovados = calcularQtdMediaCreditosReprovados(estudantes);
+
         return new MetricasCursoDTO(
                 codigoDoCurso,
                 taxaDeSucesso,
@@ -203,7 +221,91 @@ public class MetricasCursoService {
                 qtdMulheresGraduadas,
                 pctMulheresGraduadas,
                 motivosDeEvasaoMaisComuns,
-                quantidadeRealPeriodos);
+                quantidadeRealPeriodos,
+                graduadosEEvadidosPorPeriodo,
+                qtdMediaGraduadosPeriodo,
+                qtdMediaEvadidosPeriodo,
+                periodoMaisComumDeEvadir,
+                qtdMediaCreditosReprovados);
+    }
+
+    private int calcularQtdMediaCreditosReprovados(List<StudentDTO> estudantes) {
+        if (estudantes == null || estudantes.isEmpty()) {
+            return 0;
+        }
+
+        Double media = estudantes.stream()
+                .map(StudentDTO::getCreditosFalhados)
+                .filter(Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .average()
+                .orElse(0.0);
+
+        return (int) Math.round(media);
+    }
+
+
+    private int calculaPeriodoMaisComumDeEvadir(List<StudentDTO> evadidos) {
+        if (evadidos == null || evadidos.isEmpty()) {
+            return 0;
+        }
+
+        return evadidos.stream()
+                .filter(s -> s.getPeriodosCompletados() != null)
+                .collect(Collectors.groupingBy(
+                        StudentDTO::getPeriodosCompletados,
+                        Collectors.counting()
+                ))
+                .entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(0);
+    }
+
+    private List<GraduadosEEvadidosPorPeriodoDTO> calculaGraduadosEEvadidosPorPeriodo(List<StudentDTO> estudantes) {
+        if (estudantes == null || estudantes.isEmpty()) {
+            return List.of();
+        }
+
+        Map<String, int[]> mapaPorPeriodo = new HashMap<>();
+
+        for (StudentDTO estudante : estudantes) {
+            String periodo = estudante.getPeriodoDeEvasao();
+            if (periodo == null || periodo.isBlank()) continue;
+
+            String motivo = estudante.getMotivoDeEvasao();
+            boolean graduado = "GRADUADO".equalsIgnoreCase(motivo);
+
+            mapaPorPeriodo.putIfAbsent(periodo, new int[]{0, 0});
+            if (graduado) {
+                mapaPorPeriodo.get(periodo)[0]++; // graduados
+            } else {
+                mapaPorPeriodo.get(periodo)[1]++; // evadidos
+            }
+        }
+
+        return mapaPorPeriodo.entrySet().stream()
+                .map(entry -> {
+                    String periodo = entry.getKey();
+                    int[] contagem = entry.getValue();
+                    int qtdGraduados = contagem[0];
+                    int qtdEvadidos = contagem[1];
+                    int total = qtdGraduados + qtdEvadidos;
+
+                    double taxaDeSucesso = total > 0
+                            ? BigDecimal.valueOf((double) qtdGraduados / total * 100)
+                            .setScale(2, RoundingMode.HALF_UP).doubleValue()
+                            : 0.0;
+
+                    GraduadosEEvadidosPorPeriodoDTO dto = new GraduadosEEvadidosPorPeriodoDTO();
+                    dto.setPeriodo(periodo);
+                    dto.setQuantidadeGraduadosPeriodo(qtdGraduados);
+                    dto.setQuantidadeEvadidosPeriodo(qtdEvadidos);
+                    dto.setTaxaDeSucessoPeriodo(taxaDeSucesso);
+                    return dto;
+                })
+                .sorted(Comparator.comparing(GraduadosEEvadidosPorPeriodoDTO::getPeriodo))
+                .toList();
     }
 
     private List<QuantidadeRealPeriodosDTO> calculaQuantidadeRealPeriodos(List<StudentDTO> graduados) {
@@ -228,6 +330,7 @@ public class MetricasCursoService {
 
                     QuantidadeRealPeriodosDTO dto = new QuantidadeRealPeriodosDTO();
                     dto.setQuantidadeDePeriodos(quantidadeDePeriodos);
+                    dto.setQuantidadeDeGraduados((int) quantidadeGraduados);
                     dto.setPorcentagemDeGraduados(
                             BigDecimal.valueOf(porcentagem).setScale(2, RoundingMode.HALF_UP).doubleValue()
                     );
@@ -236,6 +339,7 @@ public class MetricasCursoService {
                 .sorted(Comparator.comparing(QuantidadeRealPeriodosDTO::getPorcentagemDeGraduados).reversed())
                 .toList();
     }
+
 
 
     private List<MotivoDeEvasaoDTO> getMotivosDeEvasaoMaisComuns(List<StudentDTO> evadidos, int qtd) {
