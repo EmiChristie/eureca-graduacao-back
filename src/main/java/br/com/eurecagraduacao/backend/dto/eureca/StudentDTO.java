@@ -128,6 +128,10 @@ public class StudentDTO {
         return periodoDeEvasao;
     }
 
+    public String getPeriodoDeIngresso(){
+        return periodoDeIngresso;
+    }
+
     public Integer getPeriodosCompletados(){
         return periodosCompletados;
     }
@@ -135,4 +139,6 @@ public class StudentDTO {
     public Integer getCreditosFalhados() {
         return creditosFalhados;
     }
+
+    public String getSituacao(){return situacao;}
 }

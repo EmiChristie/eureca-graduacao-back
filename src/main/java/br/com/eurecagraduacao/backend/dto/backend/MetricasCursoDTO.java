@@ -9,158 +9,106 @@ public class MetricasCursoDTO {
     @JsonProperty("codigo_do_curso")
     private Integer codigoDoCurso;
 
-    @JsonProperty("taxa_de_sucesso")
-    private double taxaDeSucesso;
+    @JsonProperty("graduados_evadidos_e_ativos_por_periodo")
+    private List<CursoPeriodoMetricasDTO> graduados_evadidos_e_ativos_por_periodo;
 
-    @JsonProperty("quantidade_de_graduados")
-    private Integer quantidadeDeGraduados;
+    @JsonProperty("taxa_de_sucesso_media")
+    private double taxaDeSucessoMedia;
 
-    @JsonProperty("quantidade_de_evadidos")
-    private Integer quantidadeDeEvadidos;
+    @JsonProperty("desvio_padrao_percentual")
+    private double desvioPadraoPercentual;
 
-    @JsonProperty("quantidade_mulheres_graduadas")
-    private Integer quantidadeMulheresGraduadas;
+    @JsonProperty("taxa_sucesso_media_mulheres")
+    private double taxaSucessoMediaMulheres;
 
-    @JsonProperty("porcentagem_mulheres_graduadas")
-    private double pctMulheresGraduadas;
+    @JsonProperty("desvio_padrao_percentual_mulheres")
+    private double desvioPadraoPercentualMulheres;
 
-    @JsonProperty("motivo_de_evasao_mais_comum")
-    private List<MotivoDeEvasaoDTO> motivoDeEvasaoMaisComum;
+    @JsonProperty("desvio_padrao_percentual_medio_de_genero")
+    private double desvioPadraoPercentualGenero;
 
-    @JsonProperty("quantidade_real_periodos")
-    private List<QuantidadeRealPeriodosDTO> quantidadeRealPeriodos;
+    @JsonProperty("porcentagem_media_mulheres_entre_graduados")
+    private double porcentagemMulheresEntreGraduados;
 
-    @JsonProperty("graduados_e_evadidos_por_periodo")
-    private List<GraduadosEEvadidosPorPeriodoDTO> graduadosEevadidosPorPeriodo;
+    @JsonProperty("porcentagem_media_homens_entre_graduados")
+    private double porcentagemHomensEntreGraduados;
 
-    @JsonProperty("qtd_media_graduados_por_periodo")
-    private Integer qtdMediaGraduadosPorPeriodo;
+    @JsonProperty("periodos_mais_comuns_de_evadir")
+    private List<PeriodoEvasaoDTO> periodosEvasao;
 
-    @JsonProperty("qtd_media_evadidos_por_periodo")
-    private Integer qtdMediaEvadidosPorPeriodo;
-
-    @JsonProperty("periodo_mais_comum_de_evadir")
-    private Integer periodoMaisComumDeEvadir;
-
-    @JsonProperty("qtd_media_creditos_reprovados")
-    private double qtdMediaCreditosReprovados;
-
-    /*
-    @JsonProperty("quantidade_real_creditos")
-    private QuantidadeRealCreditosDTO quantidadeRealCreditos;
-
-    @JsonProperty("media_de_metricas")
-    private MediaDeMetricasDTO mediaDeMetricas;
-
-    @JsonProperty("maior_cra_ativo")
-    private double maiorCraAtivo;
-
-    @JsonProperty("menor_cra_ativo")
-    private double menorCraAtivo;
-
-    @JsonProperty("porcentagem_graduados_que_se_formam_com_o_minimo_de_creditos")
-    private double porcentagemGraduadosMinCreditos;
-
-    @JsonProperty("porcentagem_graduados_que_se_formam_com_o_minimo_de_periodos")
-    private double porcentagemGraduadosMinPeriodos;
-
-    @JsonProperty("porcentagem_graduados_que_ultrapassaram_o_max_periodos")
-    private double porcentagemGraduadosMaxPeriodos;
-
-    @JsonProperty("velocidade_media_curso")
-    private double velocidadeMediaCurso;
-
-    @JsonProperty("qtd_media_ingressantes_por_periodo")
-    private Integer qtdMediaIngressantesPorPeriodo;
-
-    @JsonProperty("quantidade_de_ativos")
-    private Integer quantidadeDeAtivos;
-
-    */
-
-    public MetricasCursoDTO(Integer codigoDoCurso, double taxaDeSucesso, int size, int size1, int qtdMulheresGraduadas, double pctMulheresGraduadas, List<MotivoDeEvasaoDTO> motivosDeEvasaoMaisComuns, List<QuantidadeRealPeriodosDTO> quantidadeRealPeriodos, List<GraduadosEEvadidosPorPeriodoDTO> graduadosEEvadidosPorPeriodo, int qtdMediaGraduadosPeriodo, int qtdMediaEvadidosPeriodo, int periodoMaisComumDeEvadir, int qtdMediaCreditosReprovados) {
-        this.codigoDoCurso = codigoDoCurso;
-        this.taxaDeSucesso = taxaDeSucesso;
-        this.quantidadeDeGraduados = size;
-        this.quantidadeDeEvadidos = size1;
-        this.quantidadeMulheresGraduadas = qtdMulheresGraduadas;
-        this.pctMulheresGraduadas = pctMulheresGraduadas;
-        this.motivoDeEvasaoMaisComum = motivosDeEvasaoMaisComuns;
-        this.quantidadeRealPeriodos = quantidadeRealPeriodos;
-        this.graduadosEevadidosPorPeriodo = graduadosEEvadidosPorPeriodo;
-        this.qtdMediaGraduadosPorPeriodo = qtdMediaGraduadosPeriodo;
-        this.qtdMediaEvadidosPorPeriodo = qtdMediaEvadidosPeriodo;
-        this.periodoMaisComumDeEvadir = periodoMaisComumDeEvadir;
-        this.qtdMediaCreditosReprovados = qtdMediaCreditosReprovados;
+    public Integer getCodigoDoCurso() {
+        return codigoDoCurso;
     }
+
+    public void setCodigoDoCurso(Integer codigoDoCurso) {
+        this.codigoDoCurso = codigoDoCurso;
+    }
+
+    public List<CursoPeriodoMetricasDTO> getGraduados_evadidos_e_ativos_por_periodo() {
+        return graduados_evadidos_e_ativos_por_periodo;
+    }
+
+    public void setGraduados_evadidos_e_ativos_por_periodo(List<CursoPeriodoMetricasDTO> lista) {
+        this.graduados_evadidos_e_ativos_por_periodo = lista;
+    }
+
+    public double getTaxaDeSucessoMedia() {
+        return taxaDeSucessoMedia;
+    }
+
+    public void setTaxaDeSucessoMedia(double taxaDeSucessoMedia) {
+        this.taxaDeSucessoMedia = taxaDeSucessoMedia;
+    }
+
+    public double getDesvioPadraoPercentual() {
+        return desvioPadraoPercentual;
+    }
+
+    public void setDesvioPadraoPercentual(double desvioPadraoPercentual) {
+        this.desvioPadraoPercentual = desvioPadraoPercentual;
+    }
+    public double getTaxaSucessoMediaMulheres() {
+        return taxaSucessoMediaMulheres;
+    }
+
+    public void setTaxaSucessoMediaMulheres(double taxaSucessoMediaMulheres) {
+        this.taxaSucessoMediaMulheres = taxaSucessoMediaMulheres;
+    }
+
+    public double getDesvioPadraoPercentualGenero() {
+        return desvioPadraoPercentualGenero;
+    }
+
+    public void setDesvioPadraoPercentualGenero(double desvioPadraoPercentualGenero) {
+        this.desvioPadraoPercentualGenero = desvioPadraoPercentualGenero;
+    }
+
+    public void setDesvioPadraoPercentualMulheres(double desvioPadraoPercentualMulheres) {
+        this.desvioPadraoPercentualMulheres = desvioPadraoPercentualMulheres;
+    }
+
+    public double getPorcentagemMulheresEntreGraduados() {
+        return porcentagemMulheresEntreGraduados;
+    }
+
+    public void setPorcentagemMulheresEntreGraduados(double porcentagemMulheresEntreGraduados) {
+        this.porcentagemMulheresEntreGraduados = porcentagemMulheresEntreGraduados;
+    }
+
+    public double getPorcentagemHomensEntreGraduados() {
+        return porcentagemHomensEntreGraduados;
+    }
+
+    public void setPorcentagemHomensEntreGraduados(double porcentagemHomensEntreGraduados) {
+        this.porcentagemHomensEntreGraduados = porcentagemHomensEntreGraduados;
+    }
+
+    public Double getTaxaDeSucesso() {
+        return taxaDeSucessoMedia;
+    }
+
+    public void setPeriodosEvasao(List<PeriodoEvasaoDTO> periodosEvasao){
+        this.periodosEvasao = periodosEvasao;
+    }
+
 }
-
-/*
-{
-	"codigo_do_curso": 0,
-	"taxa_de_sucesso": 0.0,
-	"quantidade_de_graduados": 0,
-	"quantidade_de_evadidos": 0,
-	"quantidade_mulheres_graduadas": 0,
-	"porcentagem_mulheres_graduadas": 0.0,
-	"motivo_de_evasao_mais_comum": [
-		{
-			"motivo": "string",
-			"porcentagem_evadidos": 0.0,
-		},
-	],
-
-//metrica que depende mais ou menos do currículo ativo que estou observando:
-
-	"quantidade_real_periodos": [
-		{
-			"quantidade_de_periodos": 0,
-			"quantidade_de_graduados": 0,
-			"porcentagem_de_graduados": 0.0,
-		},
-	],
-	"graduados_e_evadidos_por_periodo": [
-		{
-			"quantidade_graduados_periodo": 0,
-			"quantidade_evadidos_periodo": 0,
-			"taxa_de_sucesso_periodo": 0.0,
-			"periodo": "string",
-		},
-	],
-	"qtd_media_graduados_por_periodo": 0,
-	"qtd_media_evadidos_por_periodo": 0,
-	"periodo_mais_comum_de_evadir": 0,
-	"qtd_media_creditos_reprovados": 0,
-
-//fiz ate aqui -----------------------------------------------------------------------------------------------------------
-
-
-//metricas que exclusivamente dependem do currículo que estou observando:
-
-	"quantidade_real_creditos": {
-		"quantidade_media_creditos": 0,
-		"quantidade_a_mais_que_o_minimo": 0,
-		"porcentagem_a_mais_que_o_minimo": 0.0,
-	},
-	"porcentagem_graduados_que_se_formam_com_o_minimo_de_creditos": 0.0,
-	"porcentagem_graduados_que_se_formam_com_o_minimo_de_periodos": 0.0,
-	"porcentagem_graduados_que_ultrapassaram_o_max_periodos": 0.0,
-
-//metricas que usam os alunos ativos ou outros grupos fora dos graduados/evadidos dos últimos 5 anos (objeto que eu já usava pra calcular as métricas anteriores):
-
-	"media_de_metricas": {
-    		"cra": 0,
-    		"mc": 0,
-    		"iech": 0,
-   		"iepl": 0,
-    		"iea": 0,
-    		"mcn": 0,
-    		"iean": 0,
-	},
-	"maior_cra_ativo": 0.0,
-	"menor_cra_ativo": 0.0,
-	"qtd_media_ingressantes_por_periodo": 0,
-	"quantidade_de_ativos": 0,
-	"velocidade_media_curso": 0,
-}
-* */

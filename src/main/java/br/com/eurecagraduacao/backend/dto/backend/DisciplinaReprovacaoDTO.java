@@ -1,15 +1,23 @@
 package br.com.eurecagraduacao.backend.dto.backend;
 
+import java.math.BigDecimal;
+
 public class DisciplinaReprovacaoDTO {
 
     private Integer codigo;
     private String nome;
-    private Integer numeroDeReprovacoes;
+    private int numeroDeReprovacoes;
+    private BigDecimal porcentagemDeReprovacoes;
 
-    public DisciplinaReprovacaoDTO(Integer codigo, String nome, Integer numeroDeReprovacoes) {
+    public DisciplinaReprovacaoDTO(Integer codigo, String nome, int numeroDeReprovacoes, BigDecimal porcentagemDeReprovacoes) {
         this.codigo = codigo;
         this.nome = nome;
         this.numeroDeReprovacoes = numeroDeReprovacoes;
+        this.porcentagemDeReprovacoes = porcentagemDeReprovacoes;
+    }
+
+    public BigDecimal getPorcentagemDeReprovacoes() {
+        return porcentagemDeReprovacoes;
     }
 
     public Integer getCodigo() {
@@ -34,5 +42,9 @@ public class DisciplinaReprovacaoDTO {
 
     public void setNumeroDeReprovacoes(Integer numeroDeReprovacoes) {
         this.numeroDeReprovacoes = numeroDeReprovacoes;
+    }
+
+    public void setPorcentagemDeReprovacoes(BigDecimal porcentagemDeReprovacoes) {
+        this.porcentagemDeReprovacoes = porcentagemDeReprovacoes;
     }
 }
