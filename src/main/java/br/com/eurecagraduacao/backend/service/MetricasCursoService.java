@@ -1,8 +1,10 @@
 package br.com.eurecagraduacao.backend.service;
 
 import br.com.eurecagraduacao.backend.dto.backend.*;
+import br.com.eurecagraduacao.backend.dto.eureca.CurriculoDTO;
 import br.com.eurecagraduacao.backend.dto.eureca.StudentDTO;
 import br.com.eurecagraduacao.backend.model.eureca.EnrollmentModel;
+import br.com.eurecagraduacao.backend.model.eureca.FullCurriculumModel;
 import br.com.eurecagraduacao.backend.model.eureca.StudentModel;
 import br.com.eurecagraduacao.backend.model.eureca.SubjectModel;
 import br.com.eurecagraduacao.backend.util.CalculoUtils;
@@ -150,7 +152,7 @@ public class MetricasCursoService {
                 "/estudantes" +
                 "?periodo-de-evasao-de=" + periodoDe +
                 "&periodo-de-evasao-ate=" + periodoAte +
-                "&pagina=1&tamanho=10" + // para fins de teste
+                //"&pagina=1&tamanho=10" +  para fins de teste
                 "&curso=" + codigoDoCurso;
 
         try {
@@ -337,7 +339,7 @@ public class MetricasCursoService {
                     double porcentagem = (double) quantidadeGraduados / totalGraduados * 100;
 
                     QuantidadeRealPeriodosDTO dto = new QuantidadeRealPeriodosDTO();
-                    dto.setQuantidadeDePeriodos(quantidadeDePeriodos);
+                    dto.setQuantidadeDePeriodos(quantidadeDePeriodos+"");
                     dto.setQuantidadeDeGraduados((int) quantidadeGraduados);
                     dto.setPorcentagemDeGraduados(
                             BigDecimal.valueOf(porcentagem).setScale(2, RoundingMode.HALF_UP).doubleValue()
@@ -450,6 +452,8 @@ public class MetricasCursoService {
 
         int totalGraduados = 0;
         int totalMulheresGraduadas = 0;
+        int totalAlunos = 0;
+        int totalAtivos = 0;
 
         for (Map.Entry<String, List<StudentDTO>> entrada : estudantesPorPeriodo.entrySet()) {
             String periodo = entrada.getKey();
@@ -462,6 +466,9 @@ public class MetricasCursoService {
             int graduados = contagens.getOrDefault("graduados", 0);
             int evadidos = contagens.getOrDefault("evadidos", 0);
             int mulheresGraduadas = contagens.getOrDefault("mulheresGraduadas", 0);
+
+            totalAlunos += total;
+            totalAtivos += ativos;
 
             double taxaSucesso = total > 0 ? (graduados * 100.0) / total : 0.0;
             double taxaSucessoMulheres = total > 0 ? (mulheresGraduadas * 100.0) / total : 0.0;
@@ -488,14 +495,18 @@ public class MetricasCursoService {
 
         double mediaGeral = CalculoUtils.calcularMedia(taxasDeSucesso);
         double desvioGeral = CalculoUtils.calcularDesvioPadrao(taxasDeSucesso, mediaGeral);
-        double percentualDesvioGeral = mediaGeral > 0 ? CalculoUtils.round2((desvioGeral / mediaGeral) * 100) : 0.0;
-
+        double percentualDesvioGeral = mediaGeral > 0 ? CalculoUtils.round2(desvioGeral) : 0.0;
         double mediaMulheres = CalculoUtils.calcularMedia(taxasMulheres);
         double desvioMulheres = CalculoUtils.calcularDesvioPadrao(taxasMulheres, mediaMulheres);
         double mediaMulheresEntreGraduados = CalculoUtils.calcularMedia(porcentagensMulheresPorPeriodo);
         double desvioMulheresEntreGraduados = CalculoUtils.calcularDesvioPadrao(porcentagensMulheresPorPeriodo, mediaMulheresEntreGraduados);
 
         List<PeriodoEvasaoDTO> periodosEvasao = calcularDistribuicaoEvasaoPorPeriodo(estudantesPorPeriodo);
+
+        double erro = totalAlunos > 0 ? CalculoUtils.round2((totalAtivos * 100.0) / totalAlunos) : 0.0;
+
+        CurriculoDTO curriculoDTO = buscarCurriculo(curso,curriculo);
+        MediaPeriodosDTO mediaPeriodos = calcularMediaPeriodosFormatura(estudantesPorPeriodo,curriculoDTO.getDuracaoMinima(),curriculoDTO.getDuracaoMaxima());
 
         MetricasCursoDTO dto = new MetricasCursoDTO();
         dto.setCodigoDoCurso(curso);
@@ -508,6 +519,9 @@ public class MetricasCursoService {
         dto.setPorcentagemMulheresEntreGraduados(CalculoUtils.round2(mediaMulheresEntreGraduados));
         dto.setPorcentagemHomensEntreGraduados(CalculoUtils.round2(100.0 - mediaMulheresEntreGraduados));
         dto.setPeriodosEvasao(periodosEvasao);
+        dto.setErro(erro);
+        dto.setMediaPeriodos(mediaPeriodos);
+
         return dto;
     }
 
@@ -600,6 +614,119 @@ public class MetricasCursoService {
         return resultadoFinal;
     }
 
+    public MediaPeriodosDTO calcularMediaPeriodosFormatura(
+            Map<String, List<StudentDTO>> estudantesPorPeriodo,
+            int duracaoMinima,
+            int duracaoMaxima
+    ) {
+        int somaPeriodos = 0;
+        int totalGraduados = 0;
+        Map<String, Integer> contagemAgrupada = new HashMap<>();
 
+        for (List<StudentDTO> estudantes : estudantesPorPeriodo.values()) {
+            for (StudentDTO estudante : estudantes) {
+                if ("graduado".equalsIgnoreCase(estudante.getMotivoDeEvasao())) {
+                    Integer periodos = estudante.getPeriodosCompletados();
+                    if (periodos != null) {
+                        somaPeriodos += periodos;
+                        totalGraduados++;
+
+                        String chave;
+                        if (periodos <= duracaoMinima) {
+                            chave = duracaoMinima + " ou menos";
+                        } else if (periodos >= duracaoMaxima) {
+                            chave = duracaoMaxima + " ou mais";
+                        } else {
+                            chave = String.valueOf(periodos);
+                        }
+
+                        contagemAgrupada.put(chave, contagemAgrupada.getOrDefault(chave, 0) + 1);
+                    }
+                }
+            }
+        }
+
+        MediaPeriodosDTO resultado = new MediaPeriodosDTO();
+
+        if (totalGraduados == 0) {
+            resultado.setMedia_periodos_para_se_formar(0.0);
+            resultado.setQuantidade_media_periodos_para_se_formar(Collections.emptyList());
+            resultado.setDistribuicaoPorPeriodoFormatura(Collections.emptyList());
+            resultado.setPeriodoEmDestaque(null);
+            return resultado;
+        }
+
+        double media = (double) somaPeriodos / totalGraduados;
+        int floor = (int) Math.floor(media);
+        int ceil = (int) Math.ceil(media);
+
+        resultado.setMedia_periodos_para_se_formar(round2(media));
+        resultado.setQuantidade_media_periodos_para_se_formar(
+                floor == ceil ? List.of(floor) : List.of(floor, ceil)
+        );
+
+        String periodoMaisComum = null;
+        int maxFrequencia = -1;
+
+        for (Map.Entry<String, Integer> entry : contagemAgrupada.entrySet()) {
+            if (entry.getValue() > maxFrequencia) {
+                maxFrequencia = entry.getValue();
+                periodoMaisComum = entry.getKey();
+            }
+        }
+
+        resultado.setPeriodoEmDestaque(periodoMaisComum);
+
+        String grupoMenor = duracaoMinima + " ou menos";
+        String grupoMaior = duracaoMaxima + " ou mais";
+        List<QuantidadeRealPeriodosDTO> distribuicao = new ArrayList<>();
+
+        if (contagemAgrupada.containsKey(grupoMenor)) {
+            distribuicao.add(criarDTO(grupoMenor, contagemAgrupada.get(grupoMenor), totalGraduados));
+        }
+
+        int finalTotalGraduados = totalGraduados;
+        contagemAgrupada.entrySet().stream()
+                .filter(e -> !e.getKey().equals(grupoMenor) && !e.getKey().equals(grupoMaior))
+                .sorted(Comparator.comparingInt(e -> Integer.parseInt(e.getKey())))
+                .forEach(entry -> {
+                    distribuicao.add(criarDTO(entry.getKey(), entry.getValue(), finalTotalGraduados));
+                });
+
+        if (contagemAgrupada.containsKey(grupoMaior)) {
+            distribuicao.add(criarDTO(grupoMaior, contagemAgrupada.get(grupoMaior), totalGraduados));
+        }
+
+        resultado.setDistribuicaoPorPeriodoFormatura(distribuicao);
+        return resultado;
+    }
+
+    private QuantidadeRealPeriodosDTO criarDTO(String chave, int qtd, int totalGraduados) {
+        QuantidadeRealPeriodosDTO dto = new QuantidadeRealPeriodosDTO();
+        dto.setQuantidadeDePeriodos(chave);
+        dto.setQuantidadeDeGraduados(qtd);
+        double percentual = (qtd * 100.0) / totalGraduados;
+        dto.setPorcentagemDeGraduados(Math.round(percentual * 100.0) / 100.0);
+        return dto;
+    }
+
+
+    public CurriculoDTO buscarCurriculo(Integer codigoDoCurso, Integer codigoDoCurriculo) {
+        String url = baseUrl +
+                "/curriculos/curriculo" +
+                "?curso=" + codigoDoCurso +
+                "&curriculo=" + codigoDoCurriculo;
+
+        ResponseEntity<FullCurriculumModel> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        FullCurriculumModel curriculo = response.getBody();
+        assert curriculo != null;
+        return CurriculoDTO.fromModel(curriculo);
+    }
 
 }

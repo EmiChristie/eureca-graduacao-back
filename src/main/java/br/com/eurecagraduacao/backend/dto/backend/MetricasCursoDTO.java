@@ -33,8 +33,15 @@ public class MetricasCursoDTO {
     @JsonProperty("porcentagem_media_homens_entre_graduados")
     private double porcentagemHomensEntreGraduados;
 
+    @JsonProperty("erro_global")
+    private double erro;
+    //porcentagem bruta de ativos entre todos os estudantes analisados = incertezas na análise
+
     @JsonProperty("periodos_mais_comuns_de_evadir")
     private List<PeriodoEvasaoDTO> periodosEvasao;
+
+    @JsonProperty("media_periodos_para_se_formar")
+    private MediaPeriodosDTO mediaPeriodos;
 
     public Integer getCodigoDoCurso() {
         return codigoDoCurso;
@@ -109,6 +116,22 @@ public class MetricasCursoDTO {
 
     public void setPeriodosEvasao(List<PeriodoEvasaoDTO> periodosEvasao){
         this.periodosEvasao = periodosEvasao;
+    }
+
+    public Double getErro() {
+        return erro;
+    }
+
+    public void setErro(double erro){
+        this.erro = erro;
+    }
+
+    public MediaPeriodosDTO getMediaPeriodos() {
+        return mediaPeriodos;
+    }
+
+    public void setMediaPeriodos(MediaPeriodosDTO mediaPeriodos){
+        this.mediaPeriodos = mediaPeriodos;
     }
 
 }

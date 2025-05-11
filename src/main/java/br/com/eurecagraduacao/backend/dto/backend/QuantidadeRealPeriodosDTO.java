@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 public class QuantidadeRealPeriodosDTO {
 
     @JsonProperty("quantidade_de_periodos")
-    private Integer quantidadeDePeriodos;
+    private String quantidadeDePeriodos;
 
     @JsonProperty("quantidade_de_graduados")
     private Integer quantidadeDeGraduados;
@@ -13,11 +13,11 @@ public class QuantidadeRealPeriodosDTO {
     @JsonProperty("porcentagem_de_graduados")
     private double porcentagemDeGraduados;
 
-    public double getQuantidadeDePeriodos() {
+    public String getQuantidadeDePeriodos() {
         return quantidadeDePeriodos;
     }
 
-    public void setQuantidadeDePeriodos(Integer quantidadeDePeriodos) {
+    public void setQuantidadeDePeriodos(String quantidadeDePeriodos) {
         this.quantidadeDePeriodos = quantidadeDePeriodos;
     }
 
@@ -29,11 +29,11 @@ public class QuantidadeRealPeriodosDTO {
         this.porcentagemDeGraduados = porcentagemDeGraduados;
     }
 
-    public double getQuantidadeDeGraduados() {
+    public Integer getQuantidadeDeGraduados() {
         return quantidadeDeGraduados;
     }
 
-    public void setQuantidadeDeGraduados(Integer qtdDeGraduados) {
-        this.quantidadeDeGraduados = qtdDeGraduados;
+    public void setQuantidadeDeGraduados(Integer quantidadeDeGraduados) {
+        this.quantidadeDeGraduados = quantidadeDeGraduados;
     }
 }

@@ -10,6 +10,9 @@ public class CursoPeriodoMetricasDTO {
     @JsonProperty("periodo")
     private String periodo;
 
+    @JsonProperty("total_alunos")
+    private int total;
+
     @JsonProperty("ativos")
     private int ativos;
 
@@ -42,6 +45,8 @@ public class CursoPeriodoMetricasDTO {
         this.evadidos = evadidos;
 
         int total = ativos + graduados + evadidos;
+
+        this.total = total;
 
         this.taxaDeSucesso = total > 0
                 ? BigDecimal.valueOf((graduados * 100.0) / total).setScale(2, RoundingMode.HALF_UP).doubleValue()
