@@ -136,6 +136,10 @@ public class StudentDTO {
         return periodosCompletados;
     }
 
+    public Integer getCreditosTentados() {
+        return creditosTentados;
+    }
+
     public Integer getCreditosFalhados() {
         return creditosFalhados;
     }

@@ -512,6 +512,16 @@ public class MetricasCursoService {
 
         TaxasCalculadasGraduadosGlobaisDTO taxasGlobais = calcularTaxasGraduadosGlobais(estudantesPorPeriodo);
 
+        List<Double> quantidadeCreditosMedia = calcularQtdMediaCreditos(estudantesPorPeriodo);
+
+        PerfilAlunoMedioDTO alunoMedio = new PerfilAlunoMedioDTO();
+        alunoMedio.setCra_medio(taxasGlobais.getCra_medio_global());
+        alunoMedio.setVelocidade_media(taxasGlobais.getVelocidade_media_global());
+        alunoMedio.setTaxa_de_sucesso_media(taxasGlobais.getTaxa_de_sucesso_media_global());
+        alunoMedio.setQuantidade_de_periodos_media(mediaPeriodos.getQuantidade_media_periodos_para_se_formar());
+        alunoMedio.setCreditos_matriculados_media(quantidadeCreditosMedia.get(0));
+        alunoMedio.setCreditos_reprovados_media(quantidadeCreditosMedia.get(1));
+
         MetricasCursoDTO dto = new MetricasCursoDTO();
         dto.setCodigoDoCurso(curso);
         dto.setGraduados_evadidos_e_ativos_por_periodo(metricas);
@@ -527,6 +537,7 @@ public class MetricasCursoService {
         dto.setMediaPeriodos(mediaPeriodos);
         dto.setTaxasGraduados(taxas);
         dto.setTaxasGlobais(taxasGlobais);
+        dto.setAlunoMedio(alunoMedio);
 
         return dto;
     }
@@ -822,6 +833,29 @@ public class MetricasCursoService {
         dto.setCra_medio_global(CalculoUtils.round2(CalculoUtils.calcularMedia(cras)));
 
         return dto;
+    }
+
+    public List<Double> calcularQtdMediaCreditos(Map<String, List<StudentDTO>> estudantesPorPeriodo) {
+        List<Double> creditosMatriculados = new ArrayList<>();
+        List<Double> creditosReprovados = new ArrayList<>();
+
+        for (List<StudentDTO> estudantes : estudantesPorPeriodo.values()) {
+            for (StudentDTO estudante : estudantes) {
+                if ("graduado".equalsIgnoreCase(estudante.getMotivoDeEvasao())) {
+                    if (estudante.getCreditosTentados() != null) {
+                        creditosMatriculados.add(Double.valueOf(estudante.getCreditosTentados()));
+                    }
+                    if (estudante.getCreditosFalhados() != null) {
+                        creditosReprovados.add(Double.valueOf(estudante.getCreditosFalhados()));
+                    }
+                }
+            }
+        }
+
+        double mediaMatriculados = Math.round(CalculoUtils.round2(CalculoUtils.calcularMedia(creditosMatriculados)));
+        double mediaReprovados = Math.round(CalculoUtils.round2(CalculoUtils.calcularMedia(creditosReprovados)));
+
+        return List.of(mediaMatriculados, mediaReprovados);
     }
 
 

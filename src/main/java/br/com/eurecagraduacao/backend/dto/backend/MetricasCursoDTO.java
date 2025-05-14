@@ -13,28 +13,28 @@ public class MetricasCursoDTO {
     private List<CursoPeriodoMetricasDTO> graduados_evadidos_e_ativos_por_periodo;
 
     @JsonProperty("taxa_de_sucesso_media")
-    private double taxaDeSucessoMedia;
+    private Double taxaDeSucessoMedia;
 
     @JsonProperty("desvio_padrao_percentual")
-    private double desvioPadraoPercentual;
+    private Double desvioPadraoPercentual;
 
     @JsonProperty("taxa_sucesso_media_mulheres")
-    private double taxaSucessoMediaMulheres;
+    private Double taxaSucessoMediaMulheres;
 
     @JsonProperty("desvio_padrao_percentual_mulheres")
-    private double desvioPadraoPercentualMulheres;
+    private Double desvioPadraoPercentualMulheres;
 
     @JsonProperty("desvio_padrao_percentual_medio_de_genero")
-    private double desvioPadraoPercentualGenero;
+    private Double desvioPadraoPercentualGenero;
 
     @JsonProperty("porcentagem_media_mulheres_entre_graduados")
-    private double porcentagemMulheresEntreGraduados;
+    private Double porcentagemMulheresEntreGraduados;
 
     @JsonProperty("porcentagem_media_homens_entre_graduados")
-    private double porcentagemHomensEntreGraduados;
+    private Double porcentagemHomensEntreGraduados;
 
     @JsonProperty("erro_global")
-    private double erro;
+    private Double erro;
     //porcentagem bruta de ativos entre todos os estudantes analisados = incertezas na análise
 
     @JsonProperty("periodos_mais_comuns_de_evadir")
@@ -48,6 +48,9 @@ public class MetricasCursoDTO {
 
     @JsonProperty("taxas_medias_globais")
     private TaxasCalculadasGraduadosGlobaisDTO taxasGlobais;
+
+    @JsonProperty("perfil_aluno_medio")
+    private PerfilAlunoMedioDTO alunoMedio;
 
     public Integer getCodigoDoCurso() {
         return codigoDoCurso;
@@ -65,54 +68,54 @@ public class MetricasCursoDTO {
         this.graduados_evadidos_e_ativos_por_periodo = lista;
     }
 
-    public double getTaxaDeSucessoMedia() {
+    public Double getTaxaDeSucessoMedia() {
         return taxaDeSucessoMedia;
     }
 
-    public void setTaxaDeSucessoMedia(double taxaDeSucessoMedia) {
+    public void setTaxaDeSucessoMedia(Double taxaDeSucessoMedia) {
         this.taxaDeSucessoMedia = taxaDeSucessoMedia;
     }
 
-    public double getDesvioPadraoPercentual() {
+    public Double getDesvioPadraoPercentual() {
         return desvioPadraoPercentual;
     }
 
-    public void setDesvioPadraoPercentual(double desvioPadraoPercentual) {
+    public void setDesvioPadraoPercentual(Double desvioPadraoPercentual) {
         this.desvioPadraoPercentual = desvioPadraoPercentual;
     }
-    public double getTaxaSucessoMediaMulheres() {
+    public Double getTaxaSucessoMediaMulheres() {
         return taxaSucessoMediaMulheres;
     }
 
-    public void setTaxaSucessoMediaMulheres(double taxaSucessoMediaMulheres) {
+    public void setTaxaSucessoMediaMulheres(Double taxaSucessoMediaMulheres) {
         this.taxaSucessoMediaMulheres = taxaSucessoMediaMulheres;
     }
 
-    public double getDesvioPadraoPercentualGenero() {
+    public Double getDesvioPadraoPercentualGenero() {
         return desvioPadraoPercentualGenero;
     }
 
-    public void setDesvioPadraoPercentualGenero(double desvioPadraoPercentualGenero) {
+    public void setDesvioPadraoPercentualGenero(Double desvioPadraoPercentualGenero) {
         this.desvioPadraoPercentualGenero = desvioPadraoPercentualGenero;
     }
 
-    public void setDesvioPadraoPercentualMulheres(double desvioPadraoPercentualMulheres) {
+    public void setDesvioPadraoPercentualMulheres(Double desvioPadraoPercentualMulheres) {
         this.desvioPadraoPercentualMulheres = desvioPadraoPercentualMulheres;
     }
 
-    public double getPorcentagemMulheresEntreGraduados() {
+    public Double getPorcentagemMulheresEntreGraduados() {
         return porcentagemMulheresEntreGraduados;
     }
 
-    public void setPorcentagemMulheresEntreGraduados(double porcentagemMulheresEntreGraduados) {
+    public void setPorcentagemMulheresEntreGraduados(Double porcentagemMulheresEntreGraduados) {
         this.porcentagemMulheresEntreGraduados = porcentagemMulheresEntreGraduados;
     }
 
-    public double getPorcentagemHomensEntreGraduados() {
+    public Double getPorcentagemHomensEntreGraduados() {
         return porcentagemHomensEntreGraduados;
     }
 
-    public void setPorcentagemHomensEntreGraduados(double porcentagemHomensEntreGraduados) {
+    public void setPorcentagemHomensEntreGraduados(Double porcentagemHomensEntreGraduados) {
         this.porcentagemHomensEntreGraduados = porcentagemHomensEntreGraduados;
     }
 
@@ -128,7 +131,7 @@ public class MetricasCursoDTO {
         return erro;
     }
 
-    public void setErro(double erro){
+    public void setErro(Double erro){
         this.erro = erro;
     }
 
@@ -154,6 +157,14 @@ public class MetricasCursoDTO {
 
     public void setTaxasGlobais(TaxasCalculadasGraduadosGlobaisDTO taxasGlobais){
         this.taxasGlobais = taxasGlobais;
+    }
+
+    public PerfilAlunoMedioDTO getAlunoMedio() {
+        return alunoMedio;
+    }
+
+    public void setAlunoMedio(PerfilAlunoMedioDTO alunoMedio){
+        this.alunoMedio = alunoMedio;
     }
 
 }
