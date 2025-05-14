@@ -508,6 +508,10 @@ public class MetricasCursoService {
         CurriculoDTO curriculoDTO = buscarCurriculo(curso,curriculo);
         MediaPeriodosDTO mediaPeriodos = calcularMediaPeriodosFormatura(estudantesPorPeriodo,curriculoDTO.getDuracaoMinima(),curriculoDTO.getDuracaoMaxima());
 
+        List<TaxasCalculadasGraduadosDTO> taxas = calcularTaxasGraduados(estudantesPorPeriodo,curriculoDTO.getDuracaoMinima(),curriculoDTO.getDuracaoMaxima());
+
+        TaxasCalculadasGraduadosGlobaisDTO taxasGlobais = calcularTaxasGraduadosGlobais(estudantesPorPeriodo);
+
         MetricasCursoDTO dto = new MetricasCursoDTO();
         dto.setCodigoDoCurso(curso);
         dto.setGraduados_evadidos_e_ativos_por_periodo(metricas);
@@ -521,6 +525,8 @@ public class MetricasCursoService {
         dto.setPeriodosEvasao(periodosEvasao);
         dto.setErro(erro);
         dto.setMediaPeriodos(mediaPeriodos);
+        dto.setTaxasGraduados(taxas);
+        dto.setTaxasGlobais(taxasGlobais);
 
         return dto;
     }
@@ -700,6 +706,124 @@ public class MetricasCursoService {
         resultado.setDistribuicaoPorPeriodoFormatura(distribuicao);
         return resultado;
     }
+
+    public List<TaxasCalculadasGraduadosDTO> calcularTaxasGraduados(
+            Map<String, List<StudentDTO>> estudantesPorPeriodo,
+            int duracaoMinima,
+            int duracaoMaxima
+    ) {
+        Map<String, List<StudentDTO>> agrupadosPorPeriodoDeFormatura = new HashMap<>();
+
+        for (List<StudentDTO> estudantes : estudantesPorPeriodo.values()) {
+            for (StudentDTO estudante : estudantes) {
+                if ("graduado".equalsIgnoreCase(estudante.getMotivoDeEvasao())) {
+                    Integer periodos = estudante.getPeriodosCompletados();
+                    if (periodos == null) continue;
+
+                    String chave;
+                    if (periodos <= duracaoMinima) {
+                        chave = duracaoMinima + " ou menos";
+                    } else if (periodos >= duracaoMaxima) {
+                        chave = duracaoMaxima + " ou mais";
+                    } else {
+                        chave = String.valueOf(periodos);
+                    }
+
+                    agrupadosPorPeriodoDeFormatura
+                            .computeIfAbsent(chave, k -> new ArrayList<>())
+                            .add(estudante);
+                }
+            }
+        }
+
+        List<TaxasCalculadasGraduadosDTO> resultado = new ArrayList<>();
+
+        for (Map.Entry<String, List<StudentDTO>> entry : agrupadosPorPeriodoDeFormatura.entrySet()) {
+            String chave = entry.getKey();
+            List<StudentDTO> grupo = entry.getValue();
+
+            List<Double> velocidades = new ArrayList<>();
+            List<Double> taxasSucesso = new ArrayList<>();
+            List<Double> cras = new ArrayList<>();
+
+            for (StudentDTO estudante : grupo) {
+                if (estudante.getVelocidadeMedia() != null) {
+                    velocidades.add(estudante.getVelocidadeMedia());
+                }
+                if (estudante.getTaxaDeSucesso() != null) {
+                    taxasSucesso.add(estudante.getTaxaDeSucesso());
+                }
+                if (estudante.getCra() != null) {
+                    cras.add(estudante.getCra());
+                }
+            }
+
+            double mediaVelocidade = CalculoUtils.calcularMedia(velocidades);
+            double mediaTaxaSucesso = CalculoUtils.calcularMedia(taxasSucesso);
+            double mediaCra = CalculoUtils.calcularMedia(cras);
+
+            double desvioVelocidade = CalculoUtils.calcularDesvioPadrao(velocidades, mediaVelocidade);
+            double desvioTaxaSucesso = CalculoUtils.calcularDesvioPadrao(taxasSucesso, mediaTaxaSucesso);
+            double desvioCra = CalculoUtils.calcularDesvioPadrao(cras, mediaCra);
+
+            TaxasCalculadasGraduadosDTO dto = new TaxasCalculadasGraduadosDTO();
+            dto.setQuantidade_de_periodos(chave);
+            dto.setQuantidade_de_graduados(grupo.size());
+            dto.setVelocidade_media(CalculoUtils.round2(mediaVelocidade));
+            dto.setTaxa_de_sucesso_media(CalculoUtils.round2(mediaTaxaSucesso));
+            dto.setCra_medio(CalculoUtils.round2(mediaCra));
+            dto.setDesvio_padrao_velocidade_media(CalculoUtils.round2(desvioVelocidade));
+            dto.setDesvio_padrao_taxa_de_sucesso_media(CalculoUtils.round2(desvioTaxaSucesso));
+            dto.setDesvio_padrao_cra_medio(CalculoUtils.round2(desvioCra));
+
+            resultado.add(dto);
+        }
+
+        resultado.sort(Comparator.comparingInt(dto -> {
+            String chave = dto.getQuantidade_de_periodos();
+            if (chave.endsWith("ou menos")) {
+                return Integer.parseInt(chave.split(" ")[0]) - 1;
+            } else if (chave.endsWith("ou mais")) {
+                return Integer.parseInt(chave.split(" ")[0]) + 1;
+            } else {
+                return Integer.parseInt(chave);
+            }
+        }));
+
+        return resultado;
+    }
+
+    public TaxasCalculadasGraduadosGlobaisDTO calcularTaxasGraduadosGlobais(
+            Map<String, List<StudentDTO>> estudantesPorPeriodo
+    ) {
+        List<Double> velocidades = new ArrayList<>();
+        List<Double> taxasSucesso = new ArrayList<>();
+        List<Double> cras = new ArrayList<>();
+
+        for (List<StudentDTO> estudantes : estudantesPorPeriodo.values()) {
+            for (StudentDTO estudante : estudantes) {
+                if ("graduado".equalsIgnoreCase(estudante.getMotivoDeEvasao())) {
+                    if (estudante.getVelocidadeMedia() != null) {
+                        velocidades.add(estudante.getVelocidadeMedia());
+                    }
+                    if (estudante.getTaxaDeSucesso() != null) {
+                        taxasSucesso.add(estudante.getTaxaDeSucesso());
+                    }
+                    if (estudante.getCra() != null) {
+                        cras.add(estudante.getCra());
+                    }
+                }
+            }
+        }
+
+        TaxasCalculadasGraduadosGlobaisDTO dto = new TaxasCalculadasGraduadosGlobaisDTO();
+        dto.setVelocidade_media_global(CalculoUtils.round2(CalculoUtils.calcularMedia(velocidades)));
+        dto.setTaxa_de_sucesso_media_global(CalculoUtils.round2(CalculoUtils.calcularMedia(taxasSucesso)));
+        dto.setCra_medio_global(CalculoUtils.round2(CalculoUtils.calcularMedia(cras)));
+
+        return dto;
+    }
+
 
     private QuantidadeRealPeriodosDTO criarDTO(String chave, int qtd, int totalGraduados) {
         QuantidadeRealPeriodosDTO dto = new QuantidadeRealPeriodosDTO();

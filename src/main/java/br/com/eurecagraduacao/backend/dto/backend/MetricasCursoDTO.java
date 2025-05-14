@@ -43,6 +43,12 @@ public class MetricasCursoDTO {
     @JsonProperty("media_periodos_para_se_formar")
     private MediaPeriodosDTO mediaPeriodos;
 
+    @JsonProperty("taxas_medias_graduados")
+    private List<TaxasCalculadasGraduadosDTO> taxasGraduados;
+
+    @JsonProperty("taxas_medias_globais")
+    private TaxasCalculadasGraduadosGlobaisDTO taxasGlobais;
+
     public Integer getCodigoDoCurso() {
         return codigoDoCurso;
     }
@@ -132,6 +138,22 @@ public class MetricasCursoDTO {
 
     public void setMediaPeriodos(MediaPeriodosDTO mediaPeriodos){
         this.mediaPeriodos = mediaPeriodos;
+    }
+
+    public List<TaxasCalculadasGraduadosDTO> getTaxasGraduados() {
+        return taxasGraduados;
+    }
+
+    public void setTaxasGraduados(List<TaxasCalculadasGraduadosDTO> taxasGraduados){
+        this.taxasGraduados = taxasGraduados;
+    }
+
+    public TaxasCalculadasGraduadosGlobaisDTO getTaxasGlobais() {
+        return taxasGlobais;
+    }
+
+    public void setTaxasGlobais(TaxasCalculadasGraduadosGlobaisDTO taxasGlobais){
+        this.taxasGlobais = taxasGlobais;
     }
 
 }

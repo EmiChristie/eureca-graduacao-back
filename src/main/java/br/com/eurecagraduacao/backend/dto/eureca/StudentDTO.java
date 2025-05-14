@@ -20,31 +20,31 @@ public class StudentDTO {
     private String politicaAfirmativa;
 
     @JsonProperty("cra")
-    private double cra;
+    private Double cra;
 
     @JsonProperty("mc")
-    private double mc;
+    private Double mc;
 
     @JsonProperty("iech")
-    private double iech;
+    private Double iech;
 
     @JsonProperty("iepl")
-    private double iepl;
+    private Double iepl;
 
     @JsonProperty("iea")
-    private double iea;
+    private Double iea;
 
     @JsonProperty("mcn")
-    private double mcn;
+    private Double mcn;
 
     @JsonProperty("iean")
-    private double iean;
+    private Double iean;
 
     @JsonProperty("creditos_do_cra")
     private Integer creditosDoCra;
 
     @JsonProperty("notas_acumuladas")
-    private double notasAcumuladas;
+    private Double notasAcumuladas;
 
     @JsonProperty("periodos_completados")
     private Integer periodosCompletados;
@@ -68,10 +68,10 @@ public class StudentDTO {
     private Integer creditosEmAndamento;
 
     @JsonProperty("velocidade_media")
-    private double velocidadeMedia;
+    private Double velocidadeMedia;
 
     @JsonProperty("taxa_de_sucesso")
-    private double taxaDeSucesso;
+    private Double taxaDeSucesso;
 
     @JsonProperty("situacao")
     private String situacao;
@@ -141,4 +141,10 @@ public class StudentDTO {
     }
 
     public String getSituacao(){return situacao;}
+    
+    public Double getVelocidadeMedia(){return velocidadeMedia;}
+    
+    public Double getTaxaDeSucesso(){return taxaDeSucesso;}
+    
+    public Double getCra(){return cra;}
 }
