@@ -14,6 +14,11 @@ public class CalculoUtils {
         return soma / valores.size();
     }
 
+    public static double calcularMediaInteiros(List<Integer> valores) {
+        if (valores == null || valores.isEmpty()) return 0.0;
+        return valores.stream().mapToInt(Integer::intValue).average().orElse(0.0);
+    }
+
     public static double calcularDesvioPadrao(List<Double> valores, double media) {
         if (valores.size() <= 1) return 0.0;
 
@@ -22,6 +27,15 @@ public class CalculoUtils {
             somaDosQuadrados += Math.pow(v - media, 2);
         }
         return Math.sqrt(somaDosQuadrados / valores.size());
+    }
+
+    public static double calcularDesvioPadraoInteiros(List<Integer> valores, double media) {
+        if (valores == null || valores.isEmpty()) return 0.0;
+        double soma = 0.0;
+        for (int v : valores) {
+            soma += Math.pow(v - media, 2);
+        }
+        return Math.sqrt(soma / valores.size());
     }
 
     public static double round2(double valor) {

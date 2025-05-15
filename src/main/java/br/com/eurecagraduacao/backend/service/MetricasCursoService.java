@@ -449,11 +449,16 @@ public class MetricasCursoService {
         List<Double> taxasDeSucesso = new ArrayList<>();
         List<Double> taxasMulheres = new ArrayList<>();
         List<Double> porcentagensMulheresPorPeriodo = new ArrayList<>();
+        List<Integer> ingressantesPorPeriodo = new ArrayList<>();
+        List<Integer> mulheresIngressantesPorPeriodo = new ArrayList<>();
+        List<Integer> graduadosPorPeriodo = new ArrayList<>();
 
         int totalGraduados = 0;
         int totalMulheresGraduadas = 0;
         int totalAlunos = 0;
         int totalAtivos = 0;
+        int totalMulheresIngressantes = 0;
+        int totalHomensIngressantes = 0;
 
         for (Map.Entry<String, List<StudentDTO>> entrada : estudantesPorPeriodo.entrySet()) {
             String periodo = entrada.getKey();
@@ -465,15 +470,24 @@ public class MetricasCursoService {
             int ativos = contagens.getOrDefault("ativos", 0);
             int graduados = contagens.getOrDefault("graduados", 0);
             int evadidos = contagens.getOrDefault("evadidos", 0);
+            int mulheresIngressantes = contagens.getOrDefault("mulheresIngressantes", 0);
             int mulheresGraduadas = contagens.getOrDefault("mulheresGraduadas", 0);
+
+            int totalIngressantes = estudantes.size();
+            int homensIngressantes = totalIngressantes - mulheresIngressantes;
 
             totalAlunos += total;
             totalAtivos += ativos;
+            totalMulheresIngressantes+=mulheresIngressantes;
+            totalHomensIngressantes+=homensIngressantes;
 
             double taxaSucesso = total > 0 ? (graduados * 100.0) / total : 0.0;
             double taxaSucessoMulheres = total > 0 ? (mulheresGraduadas * 100.0) / total : 0.0;
             double taxaMulheresEntreGraduados = graduados > 0 ? (mulheresGraduadas * 100.0) / graduados : 0.0;
 
+            ingressantesPorPeriodo.add(totalIngressantes);
+            mulheresIngressantesPorPeriodo.add(mulheresIngressantes);
+            graduadosPorPeriodo.add(graduados);
             taxasDeSucesso.add(taxaSucesso);
             taxasMulheres.add(taxaSucessoMulheres);
             if (taxaMulheresEntreGraduados > 0) {
@@ -488,6 +502,7 @@ public class MetricasCursoService {
                     ativos,
                     graduados,
                     evadidos,
+                    mulheresIngressantes,
                     mulheresGraduadas,
                     total
             ));
@@ -514,6 +529,26 @@ public class MetricasCursoService {
 
         List<Double> quantidadeCreditosMedia = calcularQtdMediaCreditos(estudantesPorPeriodo);
 
+        double mediaIngressantes = Math.round(CalculoUtils.calcularMediaInteiros(ingressantesPorPeriodo));
+        double mediaMulheresIngressantes = CalculoUtils.calcularMediaInteiros(mulheresIngressantesPorPeriodo);
+        double mediaHomensIngressantes = mediaIngressantes - mediaMulheresIngressantes;
+
+        double mediaGraduados = Math.round(CalculoUtils.calcularMediaInteiros(graduadosPorPeriodo));
+        double mediaEvadidos = mediaIngressantes - mediaGraduados;
+
+        double porcentagemMulheresGraduadasMulheres = totalMulheresIngressantes > 0
+                ? CalculoUtils.round2((totalMulheresGraduadas * 100.0) / totalMulheresIngressantes)
+                : 0.0;
+
+        double porcentagemHomensGraduadosHomens = totalHomensIngressantes > 0
+                ? CalculoUtils.round2(((totalGraduados - totalMulheresGraduadas) * 100.0) / totalHomensIngressantes)
+                : 0.0;
+
+        double desvioIngressantes = CalculoUtils.calcularDesvioPadraoInteiros(ingressantesPorPeriodo, mediaIngressantes);
+        double desvioMulheresIngressantes = CalculoUtils.calcularDesvioPadraoInteiros(mulheresIngressantesPorPeriodo, mediaMulheresIngressantes);
+        double desvioGraduados = CalculoUtils.calcularDesvioPadraoInteiros(graduadosPorPeriodo, mediaGraduados);
+
+
         PerfilAlunoMedioDTO alunoMedio = new PerfilAlunoMedioDTO();
         alunoMedio.setCra_medio(taxasGlobais.getCra_medio_global());
         alunoMedio.setVelocidade_media(taxasGlobais.getVelocidade_media_global());
@@ -521,6 +556,7 @@ public class MetricasCursoService {
         alunoMedio.setQuantidade_de_periodos_media(mediaPeriodos.getQuantidade_media_periodos_para_se_formar());
         alunoMedio.setCreditos_matriculados_media(quantidadeCreditosMedia.get(0));
         alunoMedio.setCreditos_reprovados_media(quantidadeCreditosMedia.get(1));
+
 
         MetricasCursoDTO dto = new MetricasCursoDTO();
         dto.setCodigoDoCurso(curso);
@@ -538,6 +574,16 @@ public class MetricasCursoService {
         dto.setTaxasGraduados(taxas);
         dto.setTaxasGlobais(taxasGlobais);
         dto.setAlunoMedio(alunoMedio);
+        dto.setPorcentagemMediaMulheresGraduadasMulheres(porcentagemMulheresGraduadasMulheres);
+        dto.setPorcentagemMediaHomensGraduadosHomens(porcentagemHomensGraduadosHomens);
+        dto.setQuantidadeMediaIngressantes(CalculoUtils.round2(mediaIngressantes));
+        dto.setQuantidadeMediaGraduados(CalculoUtils.round2(mediaGraduados));
+        dto.setQuantidadeMediaEvadidos(CalculoUtils.round2(mediaEvadidos));
+        dto.setQuantidadeMediaMulheresIngressantes(CalculoUtils.round2(mediaMulheresIngressantes));
+        dto.setQuantidadeMediaHomensIngressantes(CalculoUtils.round2(mediaHomensIngressantes));
+        dto.setDesvioPadraoIngressantes(CalculoUtils.round2(desvioIngressantes));
+        dto.setDesvioPadraoMulheresIngressantes(CalculoUtils.round2(desvioMulheresIngressantes));
+        dto.setDesvioPadraoGraduados(CalculoUtils.round2(desvioGraduados));
 
         return dto;
     }
@@ -547,10 +593,16 @@ public class MetricasCursoService {
         int ativos = 0;
         int graduados = 0;
         int evadidos = 0;
+        int mulheresIngressantes = 0;
         int mulheresGraduadas = 0;
 
         for (StudentDTO estudante : estudantes) {
             String situacao = estudante.getSituacao();
+
+            if(estudante.getSexo().equalsIgnoreCase("FEMININO")){
+                mulheresIngressantes++;
+            }
+
             if (situacao == null) continue;
 
             if (situacao.equalsIgnoreCase("ativo")) {
@@ -571,6 +623,7 @@ public class MetricasCursoService {
         resultado.put("ativos", ativos);
         resultado.put("graduados", graduados);
         resultado.put("evadidos", evadidos);
+        resultado.put("mulheresIngressantes", mulheresIngressantes);
         resultado.put("mulheresGraduadas", mulheresGraduadas);
         return resultado;
     }

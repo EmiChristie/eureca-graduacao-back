@@ -13,17 +13,26 @@ public class CursoPeriodoMetricasDTO {
     @JsonProperty("total_alunos")
     private int total;
 
-    @JsonProperty("ativos")
-    private int ativos;
-
-    @JsonProperty("graduados")
-    private int graduados;
+    @JsonProperty("mulheres_ingressantes")
+    private int mulheresIngressantes;
 
     @JsonProperty("mulheres_graduadas")
     private int mulheresGraduadas;
 
+    @JsonProperty("homens_ingressantes")
+    private int homensIngressantes;
+
+    @JsonProperty("homens_graduados")
+    private int homensGraduados;
+
+    @JsonProperty("graduados")
+    private int graduados;
+
     @JsonProperty("evadidos")
     private int evadidos;
+
+    @JsonProperty("ativos")
+    private int ativos;
 
     @JsonProperty("taxa_de_sucesso")
     private double taxaDeSucesso;
@@ -37,14 +46,30 @@ public class CursoPeriodoMetricasDTO {
     @JsonProperty("porcentagem_mulheres_graduadas_em_relacao_ao_total")
     private double porcentagemMulheresGraduadasTotal;
 
-    public CursoPeriodoMetricasDTO(String periodo, int ativos, int graduados, int evadidos, int mulheresGraduadas, int totalIngressantes) {
+    @JsonProperty("porcentagem_mulheres_graduadas_em_relacao_as_mulheres_ingressantes")
+    private double porcentagemMulheresGraduadasMulheres;
+
+    @JsonProperty("porcentagem_homens_graduados_em_relacao_aos_graduados")
+    private double porcentagemHomensGraduados;
+
+    @JsonProperty("porcentagem_homens_graduados_em_relacao_ao_total")
+    private double porcentagemHomensGraduadosTotal;
+
+    @JsonProperty("porcentagem_homens_graduados_em_relacao_aos_homens_ingressantes")
+    private double porcentagemHomensGraduadosHomens;
+
+    public CursoPeriodoMetricasDTO(String periodo, int ativos, int graduados, int evadidos, int mulheresIngressantes, int mulheresGraduadas, int totalIngressantes) {
         this.periodo = periodo;
         this.ativos = ativos;
         this.graduados = graduados;
+        this.mulheresIngressantes = mulheresIngressantes;
         this.mulheresGraduadas = mulheresGraduadas;
         this.evadidos = evadidos;
 
         int total = ativos + graduados + evadidos;
+        int homensIngressantes = total - mulheresIngressantes;
+        this.homensIngressantes = homensIngressantes;
+        this.homensGraduados = graduados - mulheresGraduadas;
 
         this.total = total;
 
@@ -62,6 +87,23 @@ public class CursoPeriodoMetricasDTO {
 
         this.porcentagemMulheresGraduadasTotal = totalIngressantes > 0
                 ? BigDecimal.valueOf((mulheresGraduadas * 100.0) / totalIngressantes).setScale(2, RoundingMode.HALF_UP).doubleValue()
+                : 0.0;
+
+        this.porcentagemMulheresGraduadasMulheres = mulheresIngressantes > 0
+                ? BigDecimal.valueOf((mulheresGraduadas * 100.0) / mulheresIngressantes).setScale(2, RoundingMode.HALF_UP).doubleValue()
+                : 0.0;
+
+
+        this.porcentagemHomensGraduados = graduados > 0
+                ? BigDecimal.valueOf((homensGraduados * 100.0) / graduados).setScale(2, RoundingMode.HALF_UP).doubleValue()
+                : 0.0;
+
+        this.porcentagemHomensGraduadosTotal = totalIngressantes > 0
+                ? BigDecimal.valueOf((homensGraduados * 100.0) / totalIngressantes).setScale(2, RoundingMode.HALF_UP).doubleValue()
+                : 0.0;
+
+        this.porcentagemHomensGraduadosHomens = homensIngressantes > 0
+                ? BigDecimal.valueOf((homensGraduados * 100.0) / homensIngressantes).setScale(2, RoundingMode.HALF_UP).doubleValue()
                 : 0.0;
     }
 
