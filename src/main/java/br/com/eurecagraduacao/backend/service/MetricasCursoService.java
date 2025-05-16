@@ -92,7 +92,8 @@ public class MetricasCursoService {
                                 disciplina.getCodigoDaDisciplina(),
                                 disciplina.getNome(),
                                 (int) reprovacoes,
-                                porcentagem // novo campo
+                                (int) totalMatriculas,
+                                porcentagem
                         ));
                     }
                 }

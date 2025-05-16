@@ -36,14 +36,6 @@ public class MetricasCursoController {
     }
 
 
-    @GetMapping("/metricas-de-sucesso-completas")
-    public MetricasCursoCompletasDTO getMetricasDeSucessoCompletas(
-            @RequestParam Integer codigoDoCurso
-    ) {
-        return metricasCursoService.getMetricasDeSucessoCompletas(codigoDoCurso);
-    }
-
-
     @GetMapping("/metricas-curso")
     public MetricasCursoDTO getMetricasCurso(
             @RequestParam Integer curso,
