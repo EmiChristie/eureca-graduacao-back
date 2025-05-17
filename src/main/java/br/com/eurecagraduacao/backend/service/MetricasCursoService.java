@@ -656,7 +656,7 @@ public class MetricasCursoService {
                     int periodo = entry.getKey();
                     int quantidade = entry.getValue();
                     double porcentagem = finalTotalEvadidos > 0 ? (quantidade * 100.0) / finalTotalEvadidos : 0.0;
-                    return new PeriodoEvasaoDTO(String.valueOf(periodo), quantidade, CalculoUtils.round2(porcentagem));
+                    return new PeriodoEvasaoDTO(periodo+"º período", quantidade, CalculoUtils.round2(porcentagem));
                 })
                 .sorted(Comparator.comparingDouble(PeriodoEvasaoDTO::getPorcentagemEvadidos).reversed())
                 .toList();
