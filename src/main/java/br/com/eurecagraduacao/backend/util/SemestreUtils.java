@@ -33,4 +33,11 @@ public class SemestreUtils {
         return count;
     }
 
+    public static int parsePeriodo(String periodo) {
+        String[] partes = periodo.split("\\.");
+        int ano = Integer.parseInt(partes[0]);
+        int semestre = Integer.parseInt(partes[1]);
+        return ano * 10 + semestre;
+    }
+
 }

@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import static br.com.eurecagraduacao.backend.util.CalculoUtils.*;
 import static br.com.eurecagraduacao.backend.util.Constants.*;
 import static br.com.eurecagraduacao.backend.util.SemestreUtils.calcularNumeroPeriodo;
+import static br.com.eurecagraduacao.backend.util.SemestreUtils.parsePeriodo;
 
 @Service
 public class MetricasCursoService {
@@ -444,8 +445,37 @@ public class MetricasCursoService {
         return estudantesPorPeriodo;
     }
 
+    public Map<String, List<StudentDTO>> getEstudantes2(Integer curso,String periodoInicial) {
+        String periodoAtual = SemestreUtils.proximoSemestre(periodoInicial);
+        Map<String, List<StudentDTO>> estudantesPorPeriodo = new LinkedHashMap<>(); // mantém ordem de inserção
+
+        while (parsePeriodo(periodoAtual) <= parsePeriodo(periodoAteMetricas)) {
+            List<StudentDTO> estudantes = buscarIngressantesPorPeriodo(curso, periodoAtual);
+
+            if (estudantes.isEmpty()) {
+                periodoAtual = SemestreUtils.proximoSemestre(periodoAtual);
+                continue;
+            }
+
+            long total = estudantes.size();
+            long ativos = estudantes.stream()
+                    .filter(e -> e.getSituacao() != null && e.getSituacao().equalsIgnoreCase("ativo"))
+                    .count();
+
+            double porcentagemAtivos = (ativos * 100.0) / total;
+
+            estudantesPorPeriodo.put(periodoAtual, estudantes);
+            periodoAtual = SemestreUtils.proximoSemestre(periodoAtual);
+        }
+
+        return estudantesPorPeriodo;
+    }
+
     public MetricasCursoDTO getMetricasCurso(Integer curso, Integer curriculo) {
         Map<String, List<StudentDTO>> estudantesPorPeriodo = getEstudantes(curso);
+        int qtdPeriodos = estudantesPorPeriodo.keySet().size();
+        String ultimoPeriodoAnalisado = (String) estudantesPorPeriodo.keySet().toArray()[qtdPeriodos-1];
+        Map<String, List<StudentDTO>> estudantesPorPeriodoComMaisDe10PorCentoDeAtivos = getEstudantes2(curso,ultimoPeriodoAnalisado);
         List<CursoPeriodoMetricasDTO> metricas = new ArrayList<>();
         List<Double> taxasDeSucesso = new ArrayList<>();
         List<Double> taxasMulheres = new ArrayList<>();
@@ -497,6 +527,30 @@ public class MetricasCursoService {
 
             totalGraduados += graduados;
             totalMulheresGraduadas += mulheresGraduadas;
+
+            metricas.add(new CursoPeriodoMetricasDTO(
+                    periodo,
+                    ativos,
+                    graduados,
+                    evadidos,
+                    mulheresIngressantes,
+                    mulheresGraduadas,
+                    total
+            ));
+        }
+
+        for (Map.Entry<String, List<StudentDTO>> entrada : estudantesPorPeriodoComMaisDe10PorCentoDeAtivos.entrySet()) {
+            String periodo = entrada.getKey();
+            List<StudentDTO> estudantes = entrada.getValue();
+
+            Map<String, Integer> contagens = calculaGraduadosEvadidosEAtivos(estudantes);
+
+            int total = estudantes.size();
+            int ativos = contagens.getOrDefault("ativos", 0);
+            int graduados = contagens.getOrDefault("graduados", 0);
+            int evadidos = contagens.getOrDefault("evadidos", 0);
+            int mulheresIngressantes = contagens.getOrDefault("mulheresIngressantes", 0);
+            int mulheresGraduadas = contagens.getOrDefault("mulheresGraduadas", 0);
 
             metricas.add(new CursoPeriodoMetricasDTO(
                     periodo,
