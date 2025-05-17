@@ -761,7 +761,7 @@ public class MetricasCursoService {
                 .filter(e -> !e.getKey().equals(grupoMenor) && !e.getKey().equals(grupoMaior))
                 .sorted(Comparator.comparingInt(e -> Integer.parseInt(e.getKey())))
                 .forEach(entry -> {
-                    distribuicao.add(criarDTO(entry.getKey(), entry.getValue(), finalTotalGraduados));
+                    distribuicao.add(criarDTO(entry.getKey()+" períodos", entry.getValue(), finalTotalGraduados));
                 });
 
         if (contagemAgrupada.containsKey(grupoMaior)) {
