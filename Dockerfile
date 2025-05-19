@@ -7,7 +7,7 @@ RUN apk update \
  && apk del --purge deps \
  && rm /var/cache/apk/*
 
-COPY out/artifacts/backend_jar/backend.jar /app.jar
+COPY target/backend-0.0.1-SNAPSHOT.jar /app.jar
 
 EXPOSE 8080
 
