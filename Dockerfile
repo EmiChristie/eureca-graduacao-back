@@ -9,4 +9,6 @@ RUN apk update \
 
 COPY out/artifacts/backend_jar/backend.jar /app.jar
 
+EXPOSE 8080
+
 ENTRYPOINT ["java", "-Djava.security.egd=file:/dev/./urandom", "-Dfile.encoding=UTF-8", "-Xmx256m", "-jar", "/app.jar"]
