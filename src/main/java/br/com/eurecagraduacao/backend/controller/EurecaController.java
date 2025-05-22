@@ -1,5 +1,6 @@
 package br.com.eurecagraduacao.backend.controller;
 
+import br.com.eurecagraduacao.backend.dto.backend.RequisitosDTO;
 import br.com.eurecagraduacao.backend.dto.eureca.*;
 import br.com.eurecagraduacao.backend.model.eureca.CourseModel;
 import br.com.eurecagraduacao.backend.model.eureca.EnrollmentHistoryModel;
@@ -109,13 +110,21 @@ public class EurecaController {
         return eurecaService.buscarMetricas(matricula,token);
     }
 
-
     @GetMapping("/user-history")
     public List<EnrollmentHistoryModel> getStudentHistory(
             @RequestParam("matricula") String matricula,
             @RequestHeader("token") String token
     ) {
         return eurecaService.buscarHistorico(matricula,token);
+    }
+
+    @GetMapping("/requisitos-disciplina")
+    public RequisitosDTO getRequisitosDisciplina(
+            @RequestParam("disciplina") String disciplina,
+            @RequestParam("curso") String curso,
+            @RequestParam("curriculo") String curriculo
+    ) {
+        return eurecaService.buscarRequisitos(disciplina,curso,curriculo);
     }
 
 }

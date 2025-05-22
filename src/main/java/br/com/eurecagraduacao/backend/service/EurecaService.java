@@ -1,5 +1,7 @@
 package br.com.eurecagraduacao.backend.service;
 
+import br.com.eurecagraduacao.backend.dto.backend.DisciplinaRelacionadaDTO;
+import br.com.eurecagraduacao.backend.dto.backend.RequisitosDTO;
 import br.com.eurecagraduacao.backend.dto.eureca.*;
 import br.com.eurecagraduacao.backend.model.eureca.*;
 import br.com.eurecagraduacao.backend.util.Constants;
@@ -9,9 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 import static br.com.eurecagraduacao.backend.util.Constants.periodoAte;
 import static br.com.eurecagraduacao.backend.util.Constants.periodoDe;
@@ -398,5 +399,79 @@ public class EurecaService {
 
         return history != null ? history.getHistoricoDeMatriculas() : List.of();
     }
+
+    public RequisitosDTO buscarRequisitos(String disciplina, String curso, String curriculo) {
+        RequisitosDTO requisitosDTO = new RequisitosDTO();
+
+        // URLs com parâmetros como string
+        String urlPre = String.format(
+                baseUrl+"pre-requisito-disciplinas?disciplina=%s&curso=%s&curriculo=%s",
+                disciplina, curso, curriculo
+        );
+
+        String urlCo = String.format(
+                baseUrl+"co-requisitos?disciplina=%s&curso=%s&curriculo=%s",
+                disciplina, curso, curriculo
+        );
+
+        String urlEq = String.format(
+                baseUrl+"disciplinas-equivalentes?disciplina=%s",
+                disciplina
+        );
+
+        List<String> codigosPre = fetchCodigos(urlPre, "condicao");
+        List<String> codigosCo = fetchCodigos(urlCo, "condicao");
+        List<String> codigosEq = fetchCodigos(urlEq, "codigo_disciplina_equivalente");
+
+        for (String codigo : codigosPre) {
+            requisitosDTO.getPre_requisitos().add(getDisciplinaRelacionada(codigo));
+        }
+        for (String codigo : codigosCo) {
+            requisitosDTO.getCo_requisitos().add(getDisciplinaRelacionada(codigo));
+        }
+        for (String codigo : codigosEq) {
+            requisitosDTO.getDisciplinas_equivalentes().add(getDisciplinaRelacionada(codigo));
+        }
+
+        return requisitosDTO;
+    }
+
+    private List<String> fetchCodigos(String url, String key) {
+        try {
+            ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<>() {}
+            );
+            return Objects.requireNonNull(response.getBody()).stream()
+                    .map(item -> String.valueOf(item.get(key)))
+                    .collect(Collectors.toList());
+        } catch (HttpClientErrorException.NotFound e) {
+            return Collections.emptyList();
+        }
+    }
+
+    private DisciplinaRelacionadaDTO getDisciplinaRelacionada(String codigo) {
+        String url = String.format(baseUrl+"disciplinas?disciplina=%s", codigo);
+        try {
+            ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<>() {}
+            );
+
+            if (response.getBody() != null && !response.getBody().isEmpty()) {
+                Map<String, Object> data = response.getBody().get(0);
+                String nome = (String) data.get("nome");
+                return new DisciplinaRelacionadaDTO(nome, codigo);
+            }
+        } catch (HttpClientErrorException.NotFound e) {
+
+        }
+        return new DisciplinaRelacionadaDTO("Desconhecida", codigo);
+    }
+
 
 }
