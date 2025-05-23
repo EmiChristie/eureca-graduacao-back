@@ -41,4 +41,8 @@ public class CalculoUtils {
     public static double round2(double valor) {
         return BigDecimal.valueOf(valor).setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
+
+    public static double round1(double valor) {
+        return BigDecimal.valueOf(valor).setScale(1, RoundingMode.HALF_UP).doubleValue();
+    }
 }

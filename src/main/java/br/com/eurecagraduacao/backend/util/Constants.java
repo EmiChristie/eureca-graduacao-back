@@ -11,6 +11,7 @@ public class Constants {
     public static String periodoAteDisciplinasReprovacao = "2024.1";
 
     public static String periodoDeMetricas = "2015.1";
+    public static String periodoDeMetricasDisciplinas = "2020.1";
     public static String periodoAteMetricas = "2025.1";
     public static double limiteAtivos = 10.0; //10%
 
