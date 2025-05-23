@@ -1,9 +1,6 @@
 package br.com.eurecagraduacao.backend.service;
 
-import br.com.eurecagraduacao.backend.dto.backend.DisciplinaDistribuicaoNotasDTO;
-import br.com.eurecagraduacao.backend.dto.backend.DisciplinaDistribuicaoStatusDTO;
-import br.com.eurecagraduacao.backend.dto.backend.DisciplinaDistribuicaoPeriodosDTO;
-import br.com.eurecagraduacao.backend.dto.backend.MetricasDisciplinaDTO;
+import br.com.eurecagraduacao.backend.dto.backend.*;
 import br.com.eurecagraduacao.backend.dto.eureca.EnrollmentDTO;
 import br.com.eurecagraduacao.backend.dto.eureca.StudentDTO;
 import br.com.eurecagraduacao.backend.model.eureca.EnrollmentModel;
@@ -15,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
+import java.util.*;
 
 import static br.com.eurecagraduacao.backend.util.Constants.*;
 
@@ -33,14 +30,17 @@ public class DisciplinaService {
         List<EnrollmentDTO> matriculas = buscarMatriculas(codigoDoCurso, disciplina);
         Double mediaDeNotasDosAprovados = calcularMediaDeNotas(matriculas);
         DisciplinaDistribuicaoStatusDTO distribuicaoDeStatus = calcularDistribuicaoDeStatus(matriculas);
+        List<DisciplinaDistribuicaoNotasDTO> distribuicaoDeNotas = calcularDistribuicaoDeNotas(matriculas);
+        List<DisciplinaDistribuicaoNotasFaixaDTO> distribuicaoDeNotasFaixa = calcularDistribuicaoDeNotasFaixa(matriculas);
 
         MetricasDisciplinaDTO dto = new MetricasDisciplinaDTO();
         dto.setMediaDeNotasDosAprovados(mediaDeNotasDosAprovados);
         dto.setDistribuicaoDeStatus(distribuicaoDeStatus);
+        dto.setDistribuicaoDeNotas(distribuicaoDeNotas);
+        dto.setDistribuicaoDeNotasFaixa(distribuicaoDeNotasFaixa);
 
         return dto;
     }
-
 
     private Double calcularMediaDeNotas(List<EnrollmentDTO> matriculas) {
         List<Double> notasDosAprovados = matriculas.stream()
@@ -101,6 +101,85 @@ public class DisciplinaService {
         dto.setTotal(total);
 
         return dto;
+    }
+
+    private List<DisciplinaDistribuicaoNotasDTO> calcularDistribuicaoDeNotas(List<EnrollmentDTO> matriculas) {
+        Map<Double, Integer> frequenciaPorNota = new HashMap<>();
+
+        List<EnrollmentDTO> comNota = matriculas.stream()
+                .filter(e -> e.getMediaFinal() != null)
+                .toList();
+
+        int totalComNota = comNota.size();
+
+        for (EnrollmentDTO e : comNota) {
+            Double nota = CalculoUtils.round2(e.getMediaFinal());
+            frequenciaPorNota.put(nota, frequenciaPorNota.getOrDefault(nota, 0) + 1);
+        }
+
+        List<DisciplinaDistribuicaoNotasDTO> distribuicao = new ArrayList<>();
+        for (Map.Entry<Double, Integer> entry : frequenciaPorNota.entrySet()) {
+            Double nota = entry.getKey();
+            Integer quantidade = entry.getValue();
+            Double porcentagem = CalculoUtils.round2((quantidade * 100.0) / totalComNota);
+
+            DisciplinaDistribuicaoNotasDTO dto = new DisciplinaDistribuicaoNotasDTO();
+            dto.setNota(nota);
+            dto.setQuantidadeDeAlunos(quantidade);
+            dto.setPorcentagemDeAlunos(porcentagem);
+
+            distribuicao.add(dto);
+        }
+
+        distribuicao.sort(Comparator.comparing(DisciplinaDistribuicaoNotasDTO::getNota));
+
+        return distribuicao;
+    }
+
+    private List<DisciplinaDistribuicaoNotasFaixaDTO> calcularDistribuicaoDeNotasFaixa(List<EnrollmentDTO> matriculas) {
+        Map<String, Integer> faixaContagem = new HashMap<>();
+
+        List<EnrollmentDTO> comNota = matriculas.stream()
+                .filter(e -> e.getMediaFinal() != null)
+                .toList();
+
+        int totalComNota = comNota.size();
+
+        for (EnrollmentDTO e : comNota) {
+            double nota = CalculoUtils.round2(e.getMediaFinal());
+
+            String faixa;
+            if (nota == 10.0) {
+                faixa = "10";
+            } else {
+                int base = (int) nota;
+                faixa = base + " a " + base + ".9";
+            }
+
+            faixaContagem.put(faixa, faixaContagem.getOrDefault(faixa, 0) + 1);
+        }
+
+        List<DisciplinaDistribuicaoNotasFaixaDTO> distribuicao = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : faixaContagem.entrySet()) {
+            String faixa = entry.getKey();
+            Integer quantidade = entry.getValue();
+            Double porcentagem = CalculoUtils.round2((quantidade * 100.0) / totalComNota);
+
+            DisciplinaDistribuicaoNotasFaixaDTO dto = new DisciplinaDistribuicaoNotasFaixaDTO();
+            dto.setFaixa(faixa);
+            dto.setQuantidadeDeAlunos(quantidade);
+            dto.setPorcentagemDeAlunos(porcentagem);
+
+            distribuicao.add(dto);
+        }
+
+        distribuicao.sort(Comparator.comparing(dto -> {
+            String faixa = dto.getFaixa();
+            if ("10".equals(faixa)) return 100;
+            return Integer.parseInt(faixa.split(" ")[0]);
+        }));
+
+        return distribuicao;
     }
 
     private List<EnrollmentDTO> buscarMatriculas(String codigoDoCurso, String codigoDaDisciplina) {
