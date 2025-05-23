@@ -1,22 +1,34 @@
 package br.com.eurecagraduacao.backend.dto.eureca;
 
 import br.com.eurecagraduacao.backend.model.eureca.EnrollmentModel;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class EnrollmentDTO {
 
+    @JsonProperty("matricula_do_estudante")
+    private String matriculaDoEstudante;
+
+    @JsonProperty("status")
     private String status;
+
+    @JsonProperty("tipo")
     private String tipo;
+
+    @JsonProperty("periodo")
     private String periodo;
+
+    @JsonProperty("media_final")
     private Double mediaFinal;
 
     public EnrollmentDTO() {
     }
 
-    public EnrollmentDTO(String status, String tipo, String periodo, Double mediaFinal) {
+    public EnrollmentDTO(String status, String tipo, String periodo, Double mediaFinal, String matriculaDoEstudante) {
         this.status = status;
         this.tipo = tipo;
         this.periodo = periodo;
         this.mediaFinal = mediaFinal;
+        this.matriculaDoEstudante = matriculaDoEstudante;
     }
 
     public static EnrollmentDTO fromModel(EnrollmentModel model) {
@@ -24,7 +36,8 @@ public class EnrollmentDTO {
                 model.getStatus(),
                 model.getTipo(),
                 model.getPeriodo(),
-                model.getMediaFinal()
+                model.getMediaFinal(),
+                model.getMatriculaDoEstudante()
         );
     }
 
@@ -60,6 +73,14 @@ public class EnrollmentDTO {
         this.mediaFinal = mediaFinal;
     }
 
+    public String getMatriculaDoEstudante() {
+        return matriculaDoEstudante;
+    }
+
+    public void setMatriculaDoEstudante(String matriculaDoEstudante) {
+        this.matriculaDoEstudante = matriculaDoEstudante;
+    }
+
     @Override
     public String toString() {
         return "EnrollmentDTO{" +
@@ -67,6 +88,7 @@ public class EnrollmentDTO {
                 ", tipo='" + tipo + '\'' +
                 ", periodo='" + periodo + '\'' +
                 ", mediaFinal=" + mediaFinal +
+                ", matriculaDoEstudante='" + matriculaDoEstudante + '\'' +
                 '}';
     }
 }

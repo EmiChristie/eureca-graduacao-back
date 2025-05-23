@@ -53,9 +53,9 @@ public class EurecaService {
 
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode().value() == 404) {
-                return List.of(); // retorna vazio se não houver estudantes
+                return List.of();
             } else {
-                throw e; // propaga outros erros
+                throw e;
             }
         }
     }

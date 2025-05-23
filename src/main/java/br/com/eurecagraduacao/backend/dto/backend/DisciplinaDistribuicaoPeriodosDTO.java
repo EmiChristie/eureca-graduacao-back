@@ -2,38 +2,51 @@ package br.com.eurecagraduacao.backend.dto.backend;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.List;
+
 public class DisciplinaDistribuicaoPeriodosDTO {
 
-    @JsonProperty("periodo")
-    private Integer periodo;
+    @JsonProperty("quantidade_de_matriculas")
+    private Integer quantidadeDeMatriculas;
 
-    @JsonProperty("quantidade_de_alunos")
-    private Integer quantidadeDeAlunos;
+    @JsonProperty("quantidade_de_estudantes_analisados")
+    private Integer quantidadeDeEstudantesAnalisados;
 
-    @JsonProperty("porcentagem_de_alunos")
-    private Double porcentagemDeAlunos;
+    @JsonProperty("erro_percentual")
+    private Double erroPercentual;
 
-    public Integer getPeriodo() {
-        return periodo;
+    @JsonProperty("distribuicao")
+    private List<DisciplinaDistribuicaoPeriodoDTO> distribuicao;
+
+    public Integer getQuantidadeDeMatriculas() {
+        return quantidadeDeMatriculas;
     }
 
-    public void setPeriodo(Integer periodo) {
-        this.periodo = periodo;
+    public void setQuantidadeDeMatriculas(Integer quantidadeDeMatriculas) {
+        this.quantidadeDeMatriculas = quantidadeDeMatriculas;
     }
 
-    public Integer getQuantidadeDeAlunos() {
-        return quantidadeDeAlunos;
+    public Integer getQuantidadeDeEstudantesAnalisados() {
+        return quantidadeDeEstudantesAnalisados;
     }
 
-    public void setQuantidadeDeAlunos(Integer quantidadeDeAlunos) {
-        this.quantidadeDeAlunos = quantidadeDeAlunos;
+    public void setQuantidadeDeEstudantesAnalisados(Integer quantidadeDeEstudantesAnalisados) {
+        this.quantidadeDeEstudantesAnalisados = quantidadeDeEstudantesAnalisados;
     }
 
-    public Double getPorcentagemDeAlunos() {
-        return porcentagemDeAlunos;
+    public Double getErroPercentual() {
+        return erroPercentual;
     }
 
-    public void setPorcentagemDeAlunos(Double porcentagemDeAlunos) {
-        this.porcentagemDeAlunos = porcentagemDeAlunos;
+    public void setErroPercentual(Double erroPercentual) {
+        this.erroPercentual = erroPercentual;
+    }
+
+    public List<DisciplinaDistribuicaoPeriodoDTO> getDistribuicao() {
+        return distribuicao;
+    }
+
+    public void setDistribuicao(List<DisciplinaDistribuicaoPeriodoDTO> distribuicao) {
+        this.distribuicao = distribuicao;
     }
 }

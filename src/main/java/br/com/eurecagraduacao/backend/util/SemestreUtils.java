@@ -20,11 +20,11 @@ public class SemestreUtils {
         }
     }
 
-    public static int calcularNumeroPeriodo(String ingresso, String evasao) {
+    public static int calcularNumeroPeriodo(String p1, String p2) {
         int count = 1;
-        String atual = ingresso;
+        String atual = p1;
 
-        while (!atual.equals(evasao)) {
+        while (!atual.equals(p2)) {
             atual = SemestreUtils.proximoSemestre(atual);
             count++;
             if (count > 100) break;

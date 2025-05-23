@@ -12,13 +12,17 @@ public class MetricasDisciplinaDTO {
     private DisciplinaDistribuicaoStatusDTO distribuicaoDeStatus;
 
     @JsonProperty("distribuicao_de_periodos")
-    private List<DisciplinaDistribuicaoPeriodosDTO> distribuicaoDePeriodos;
+    private DisciplinaDistribuicaoPeriodosDTO distribuicaoDePeriodos;
 
     @JsonProperty("distribuicao_de_notas")
     private List<DisciplinaDistribuicaoNotasDTO> distribuicaoDeNotas;
 
     @JsonProperty("distribuicao_de_notas_faixa")
     private List<DisciplinaDistribuicaoNotasFaixaDTO> distribuicaoDeNotasFaixa;
+
+    @JsonProperty("distribuicao_de_notas_em_faixas_de_aprovacao")
+    private List<DisciplinaDistribuicaoNotasFaixaDTO> distribuicaoDeNotasEmFaixasDeAprovacao;
+
 
     public Double getMediaDeNotasDosAprovados() {
         return mediaDeNotasDosAprovados;
@@ -36,11 +40,11 @@ public class MetricasDisciplinaDTO {
         this.distribuicaoDeStatus = distribuicaoDeStatus;
     }
 
-    public List<DisciplinaDistribuicaoPeriodosDTO> getDistribuicaoDePeriodos() {
+    public DisciplinaDistribuicaoPeriodosDTO getDistribuicaoDePeriodos() {
         return distribuicaoDePeriodos;
     }
 
-    public void setDistribuicaoDePeriodos(List<DisciplinaDistribuicaoPeriodosDTO> distribuicaoDePeriodos) {
+    public void setDistribuicaoDePeriodos(DisciplinaDistribuicaoPeriodosDTO distribuicaoDePeriodos) {
         this.distribuicaoDePeriodos = distribuicaoDePeriodos;
     }
 
@@ -58,5 +62,13 @@ public class MetricasDisciplinaDTO {
 
     public void setDistribuicaoDeNotasFaixa(List<DisciplinaDistribuicaoNotasFaixaDTO> distribuicaoDeNotasFaixa) {
         this.distribuicaoDeNotasFaixa = distribuicaoDeNotasFaixa;
+    }
+
+    public List<DisciplinaDistribuicaoNotasFaixaDTO> getDistribuicaoDeNotasEmFaixasDeAprovacao() {
+        return distribuicaoDeNotasEmFaixasDeAprovacao;
+    }
+
+    public void setDistribuicaoDeNotasEmFaixasDeAprovacao(List<DisciplinaDistribuicaoNotasFaixaDTO> distribuicaoDeNotasEmFaixasDeAprovacao) {
+        this.distribuicaoDeNotasEmFaixasDeAprovacao = distribuicaoDeNotasEmFaixasDeAprovacao;
     }
 }

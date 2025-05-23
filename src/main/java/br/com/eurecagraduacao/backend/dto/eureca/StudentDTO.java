@@ -7,6 +7,9 @@ import java.util.List;
 
 public class StudentDTO {
 
+    @JsonProperty("matricula_do_estudante")
+    private String matricula;
+
     @JsonProperty("sexo")
     private String sexo;
 
@@ -87,6 +90,7 @@ public class StudentDTO {
 
     public static StudentDTO fromModel(StudentModel model) {
         StudentDTO dto = new StudentDTO();
+        dto.matricula = model.getMatriculaDoEstudante();
         dto.sexo = model.getSexo();
         dto.cor = model.getCor();
         dto.deficiencias = model.getDeficiencias();
@@ -114,6 +118,10 @@ public class StudentDTO {
         dto.motivoDeEvasao = model.getMotivoDeEvasao();
         dto.periodoDeIngresso = model.getPeriodoDeIngresso();
         return dto;
+    }
+
+    public String getMatricula(){
+        return matricula;
     }
 
     public String getMotivoDeEvasao() {

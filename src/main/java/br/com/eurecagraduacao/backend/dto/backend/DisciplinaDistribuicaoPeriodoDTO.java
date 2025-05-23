@@ -2,10 +2,10 @@ package br.com.eurecagraduacao.backend.dto.backend;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class DisciplinaDistribuicaoNotasFaixaDTO {
+public class DisciplinaDistribuicaoPeriodoDTO {
 
-    @JsonProperty("faixa")
-    private String faixa;
+    @JsonProperty("periodo")
+    private String periodo;
 
     @JsonProperty("quantidade_de_alunos")
     private Integer quantidadeDeAlunos;
@@ -13,21 +13,20 @@ public class DisciplinaDistribuicaoNotasFaixaDTO {
     @JsonProperty("porcentagem_de_alunos")
     private Double porcentagemDeAlunos;
 
-    public DisciplinaDistribuicaoNotasFaixaDTO() {
-    }
+    public DisciplinaDistribuicaoPeriodoDTO() {}
 
-    public DisciplinaDistribuicaoNotasFaixaDTO(String faixa, Integer quantidadeDeAlunos, Double porcentagemDeAlunos) {
-        this.faixa = faixa;
+    public DisciplinaDistribuicaoPeriodoDTO(String periodo, Integer quantidadeDeAlunos, Double porcentagemDeAlunos) {
+        this.periodo = periodo;
         this.quantidadeDeAlunos = quantidadeDeAlunos;
         this.porcentagemDeAlunos = porcentagemDeAlunos;
     }
 
-    public String getFaixa() {
-        return faixa;
+    public String getPeriodo() {
+        return periodo;
     }
 
-    public void setFaixa(String faixa) {
-        this.faixa = faixa;
+    public void setPeriodo(String periodo) {
+        this.periodo = periodo;
     }
 
     public Integer getQuantidadeDeAlunos() {
