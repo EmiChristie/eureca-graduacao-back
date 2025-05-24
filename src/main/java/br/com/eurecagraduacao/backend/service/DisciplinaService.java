@@ -33,7 +33,7 @@ public class DisciplinaService {
     public MetricasDisciplinaDTO buscarMetricasDisciplina(String codigoDoCurso, String disciplina) {
         List<EnrollmentDTO> matriculas = buscarMatriculas(codigoDoCurso, disciplina);
         Double mediaDeNotasDosAprovados = calcularMediaDeNotas(matriculas);
-        DisciplinaDistribuicaoStatusDTO distribuicaoDeStatus = calcularDistribuicaoDeStatus(matriculas);
+        List<DisciplinaDistribuicaoStatusDTO> distribuicaoDeStatus = calcularDistribuicaoDeStatus(matriculas);
         List<DisciplinaDistribuicaoNotasDTO> distribuicaoDeNotas = calcularDistribuicaoDeNotas(matriculas);
         List<DisciplinaDistribuicaoNotasFaixaDTO> distribuicaoDeNotasFaixa = calcularDistribuicaoDeNotasFaixa(matriculas);
         List<DisciplinaDistribuicaoNotasFaixaDTO> distribuicaoDeNotasFaixaDeAprovacao = calcularDistribuicaoDeNotasFaixaDeAprovacao(matriculas);
@@ -61,56 +61,47 @@ public class DisciplinaService {
         return CalculoUtils.round1(media);
     }
 
-    private DisciplinaDistribuicaoStatusDTO calcularDistribuicaoDeStatus(List<EnrollmentDTO> matriculas) {
-        int aprovadosPorNota = 0;
-        int dispensados = 0;
-        int reprovadosPorNota = 0;
-        int reprovadosPorFalta = 0;
-        int trancados = 0;
-        int cancelados = 0;
+    private List<DisciplinaDistribuicaoStatusDTO> calcularDistribuicaoDeStatus(List<EnrollmentDTO> matriculas) {
+        Map<String, Integer> contagemPorStatus = new HashMap<>();
 
         for (EnrollmentDTO matricula : matriculas) {
-            String status = matricula.getStatus() != null ? matricula.getStatus().toLowerCase() : "";
-            String tipo = matricula.getTipo() != null ? matricula.getTipo().toLowerCase() : "";
+            String chave;
 
-            switch (status) {
-                case "aprovado":
-                    if ("dispensa".equals(tipo)) {
-                        dispensados++;
-                    }else{
-                    aprovadosPorNota++;
-                    }
-                    break;
-                case "reprovado":
-                    reprovadosPorNota++;
-                    break;
-                case "reprovado por falta":
-                    reprovadosPorFalta++;
-                    break;
-                case "trancado":
-                    trancados++;
-                    break;
-                case "cancelado":
-                    cancelados++;
-                    break;
-                default: break;
+            if (matricula.getStatus().equalsIgnoreCase("aprovado") &&
+                    matricula.getTipo().equalsIgnoreCase("dispensa")) {
+                chave = "Dispensados";
+            } else if (matricula.getStatus().equalsIgnoreCase("aprovado")) {
+                chave = "Aprovados";
+            } else if (matricula.getStatus().equalsIgnoreCase("reprovado por falta")) {
+                chave = "Reprovados por falta";
+            } else if (matricula.getStatus().equalsIgnoreCase("reprovado")) {
+                chave = "Reprovados por nota";
+            } else if (matricula.getStatus().equalsIgnoreCase("cancelado")) {
+                chave = "Cancelados";
+            } else if (matricula.getStatus().equalsIgnoreCase("trancado")) {
+                chave = "Trancados";
+            } else {
+                continue;
             }
+
+            contagemPorStatus.put(chave, contagemPorStatus.getOrDefault(chave, 0) + 1);
         }
 
-        int total = aprovadosPorNota + dispensados + reprovadosPorNota +
-                reprovadosPorFalta + trancados + cancelados;
+        int totalAlunos = contagemPorStatus.values().stream().mapToInt(Integer::intValue).sum();
 
-        DisciplinaDistribuicaoStatusDTO dto = new DisciplinaDistribuicaoStatusDTO();
-        dto.setAprovadosPorNota(aprovadosPorNota);
-        dto.setDispensados(dispensados);
-        dto.setReprovadosPorNota(reprovadosPorNota);
-        dto.setReprovadosPorFalta(reprovadosPorFalta);
-        dto.setTrancados(trancados);
-        dto.setCancelados(cancelados);
-        dto.setTotal(total);
-
-        return dto;
+        return contagemPorStatus.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> {
+                    String status = entry.getKey();
+                    int quantidade = entry.getValue();
+                    double porcentagem = totalAlunos > 0
+                            ? CalculoUtils.round2((quantidade * 100.0) / totalAlunos)
+                            : 0.0;
+                    return new DisciplinaDistribuicaoStatusDTO(status, quantidade, porcentagem);
+                })
+                .collect(Collectors.toList());
     }
+
 
     private List<DisciplinaDistribuicaoNotasDTO> calcularDistribuicaoDeNotas(List<EnrollmentDTO> matriculas) {
         Map<Double, Integer> frequenciaPorNota = new HashMap<>();
@@ -146,7 +137,12 @@ public class DisciplinaService {
     }
 
     private List<DisciplinaDistribuicaoNotasFaixaDTO> calcularDistribuicaoDeNotasFaixa(List<EnrollmentDTO> matriculas) {
-        Map<String, Integer> faixaContagem = new HashMap<>();
+        Map<String, Integer> faixaContagem = new LinkedHashMap<>();
+
+        for (int i = 0; i <= 9; i++) {
+            faixaContagem.put(i + ""/*" - " + i + ".9"*/, 0);
+        }
+        faixaContagem.put("10", 0);
 
         List<EnrollmentDTO> comNota = matriculas.stream()
                 .filter(e -> e.getMediaFinal() != null)
@@ -162,17 +158,19 @@ public class DisciplinaService {
                 faixa = "10";
             } else {
                 int base = (int) nota;
-                faixa = base + " a " + base + ".9";
+                faixa = base + "";//" - " + base + ".9";
             }
 
-            faixaContagem.put(faixa, faixaContagem.getOrDefault(faixa, 0) + 1);
+            faixaContagem.put(faixa, faixaContagem.get(faixa) + 1);
         }
 
         List<DisciplinaDistribuicaoNotasFaixaDTO> distribuicao = new ArrayList<>();
         for (Map.Entry<String, Integer> entry : faixaContagem.entrySet()) {
             String faixa = entry.getKey();
             Integer quantidade = entry.getValue();
-            Double porcentagem = CalculoUtils.round2((quantidade * 100.0) / totalComNota);
+            Double porcentagem = totalComNota > 0
+                    ? CalculoUtils.round2((quantidade * 100.0) / totalComNota)
+                    : 0.0;
 
             DisciplinaDistribuicaoNotasFaixaDTO dto = new DisciplinaDistribuicaoNotasFaixaDTO();
             dto.setFaixa(faixa);
@@ -181,12 +179,6 @@ public class DisciplinaService {
 
             distribuicao.add(dto);
         }
-
-        distribuicao.sort(Comparator.comparing(dto -> {
-            String faixa = dto.getFaixa();
-            if ("10".equals(faixa)) return 100;
-            return Integer.parseInt(faixa.split(" ")[0]);
-        }));
 
         return distribuicao;
     }

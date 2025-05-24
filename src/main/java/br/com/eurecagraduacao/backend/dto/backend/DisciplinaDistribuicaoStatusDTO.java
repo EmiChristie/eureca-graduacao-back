@@ -4,80 +4,44 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DisciplinaDistribuicaoStatusDTO {
 
-    @JsonProperty("aprovados_por_nota")
-    private Integer aprovadosPorNota;
+    @JsonProperty("status")
+    private String status;
 
-    @JsonProperty("dispensados")
-    private Integer dispensados;
+    @JsonProperty("quantidade_de_alunos")
+    private Integer quantidadeDeAlunos;
 
-    @JsonProperty("reprovados_por_nota")
-    private Integer reprovadosPorNota;
+    @JsonProperty("porcentagem_de_alunos")
+    private Double porcentagemDeAlunos;
 
-    @JsonProperty("reprovados_por_falta")
-    private Integer reprovadosPorFalta;
+    public DisciplinaDistribuicaoStatusDTO() {}
 
-    @JsonProperty("trancados")
-    private Integer trancados;
-
-    @JsonProperty("cancelados")
-    private Integer cancelados;
-
-    @JsonProperty("total")
-    private Integer total;
-
-    public Integer getAprovadosPorNota() {
-        return aprovadosPorNota;
+    public DisciplinaDistribuicaoStatusDTO(String status, Integer quantidadeDeAlunos, Double porcentagemDeAlunos) {
+        this.status = status;
+        this.quantidadeDeAlunos = quantidadeDeAlunos;
+        this.porcentagemDeAlunos = porcentagemDeAlunos;
     }
 
-    public void setAprovadosPorNota(Integer aprovadosPorNota) {
-        this.aprovadosPorNota = aprovadosPorNota;
+    public String getStatus() {
+        return status;
     }
 
-    public Integer getDispensados() {
-        return dispensados;
+    public void setStatus(String status) {
+        this.status = status;
     }
 
-    public void setDispensados(Integer dispensados) {
-        this.dispensados = dispensados;
+    public Integer getQuantidadeDeAlunos() {
+        return quantidadeDeAlunos;
     }
 
-    public Integer getReprovadosPorNota() {
-        return reprovadosPorNota;
+    public void setQuantidadeDeAlunos(Integer quantidadeDeAlunos) {
+        this.quantidadeDeAlunos = quantidadeDeAlunos;
     }
 
-    public void setReprovadosPorNota(Integer reprovadosPorNota) {
-        this.reprovadosPorNota = reprovadosPorNota;
+    public Double getPorcentagemDeAlunos() {
+        return porcentagemDeAlunos;
     }
 
-    public Integer getReprovadosPorFalta() {
-        return reprovadosPorFalta;
-    }
-
-    public void setReprovadosPorFalta(Integer reprovadosPorFalta) {
-        this.reprovadosPorFalta = reprovadosPorFalta;
-    }
-
-    public Integer getTrancados() {
-        return trancados;
-    }
-
-    public void setTrancados(Integer trancados) {
-        this.trancados = trancados;
-    }
-
-    public Integer getCancelados() {
-        return cancelados;
-    }
-
-    public void setCancelados(Integer cancelados) {
-        this.cancelados = cancelados;
-    }
-
-    public Integer getTotal() {
-        return total;
-    }
-
-    public void setTotal(Integer total) {
-        this.total = total;
+    public void setPorcentagemDeAlunos(Double porcentagemDeAlunos) {
+        this.porcentagemDeAlunos = porcentagemDeAlunos;
     }
 }

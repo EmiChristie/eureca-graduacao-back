@@ -9,7 +9,7 @@ public class MetricasDisciplinaDTO {
     private Double mediaDeNotasDosAprovados;
 
     @JsonProperty("distribuicao_de_status")
-    private DisciplinaDistribuicaoStatusDTO distribuicaoDeStatus;
+    private List<DisciplinaDistribuicaoStatusDTO> distribuicaoDeStatus;
 
     @JsonProperty("distribuicao_de_periodos")
     private DisciplinaDistribuicaoPeriodosDTO distribuicaoDePeriodos;
@@ -32,11 +32,11 @@ public class MetricasDisciplinaDTO {
         this.mediaDeNotasDosAprovados = mediaDeNotasDosAprovados;
     }
 
-    public DisciplinaDistribuicaoStatusDTO getDistribuicaoDeStatus() {
+    public List<DisciplinaDistribuicaoStatusDTO> getDistribuicaoDeStatus() {
         return distribuicaoDeStatus;
     }
 
-    public void setDistribuicaoDeStatus(DisciplinaDistribuicaoStatusDTO distribuicaoDeStatus) {
+    public void setDistribuicaoDeStatus(List<DisciplinaDistribuicaoStatusDTO> distribuicaoDeStatus) {
         this.distribuicaoDeStatus = distribuicaoDeStatus;
     }
 
