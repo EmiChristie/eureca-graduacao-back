@@ -310,7 +310,7 @@ public class DisciplinaService {
         String url = baseUrl +
                 "/matriculas" +
                 "?periodo-de=" + periodoDeMetricasDisciplinas +
-                "&periodo-ate=" + periodoAteMetricas +
+                "&periodo-ate=" + periodoAte +
                 "&curso=" + codigoDoCurso +
                 "&disciplina=" + codigoDaDisciplina;
 
@@ -333,7 +333,7 @@ public class DisciplinaService {
     public List<StudentDTO> buscarEstudantes(String codigoDoCurso) {
         String url = baseUrl +
                 "/estudantes" +
-                "?periodo-de-ingresso-de=" + periodoDeMetricas +
+                "?periodo-de-ingresso-de=" + periodoDe +
                 "&curso=" + codigoDoCurso;
 
         try {

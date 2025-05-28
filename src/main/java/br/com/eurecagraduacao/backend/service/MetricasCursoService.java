@@ -65,8 +65,8 @@ public class MetricasCursoService {
             try {
                 String urlMatriculas = baseUrl +
                         "/matriculas" +
-                        "?periodo-de=" + Constants.periodoDeDisciplinasReprovacao +
-                        "&periodo-ate=" + Constants.periodoAteDisciplinasReprovacao +
+                        "?periodo-de=" + Constants.periodoDeMetricasDisciplinas +
+                        "&periodo-ate=" + Constants.periodoAte +
                         "&curso=" + codigoDoCurso +
                         "&disciplina=" + disciplina.getCodigoDaDisciplina();
 
@@ -416,7 +416,7 @@ public class MetricasCursoService {
     }
 
     public Map<String, List<StudentDTO>> getEstudantes(Integer curso) {
-        String periodoAtual = periodoDeMetricas;
+        String periodoAtual = periodoDe;
         Map<String, List<StudentDTO>> estudantesPorPeriodo = new LinkedHashMap<>(); // mantém ordem de inserção
 
         while (true) {
@@ -449,7 +449,7 @@ public class MetricasCursoService {
         String periodoAtual = SemestreUtils.proximoSemestre(periodoInicial);
         Map<String, List<StudentDTO>> estudantesPorPeriodo = new LinkedHashMap<>(); // mantém ordem de inserção
 
-        while (parsePeriodo(periodoAtual) <= parsePeriodo(periodoAteMetricas)) {
+        while (parsePeriodo(periodoAtual) <= parsePeriodo(periodoAte)) {
             List<StudentDTO> estudantes = buscarIngressantesPorPeriodo(curso, periodoAtual);
 
             if (estudantes.isEmpty()) {
