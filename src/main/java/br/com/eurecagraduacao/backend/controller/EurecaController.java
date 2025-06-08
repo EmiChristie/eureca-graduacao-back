@@ -2,9 +2,11 @@ package br.com.eurecagraduacao.backend.controller;
 
 import br.com.eurecagraduacao.backend.dto.backend.RequisitosDTO;
 import br.com.eurecagraduacao.backend.dto.eureca.*;
+import br.com.eurecagraduacao.backend.dto.sig.CurriculoSigDTO;
 import br.com.eurecagraduacao.backend.model.eureca.CourseModel;
 import br.com.eurecagraduacao.backend.model.eureca.EnrollmentHistoryModel;
 import br.com.eurecagraduacao.backend.model.eureca.MetricsHistoryModel;
+import br.com.eurecagraduacao.backend.model.sig.CursoSigModel;
 import br.com.eurecagraduacao.backend.service.EurecaService;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,7 +42,7 @@ public class EurecaController {
     }
 
     @GetMapping("/curso")
-    public CourseModel getCursoEspecifico(
+    public CursoSigModel getCursoEspecifico(
             @RequestParam("curso") Integer codigoDoCurso
     ) {
         return eurecaService.buscarCursoEspecifico(codigoDoCurso);
@@ -54,11 +56,26 @@ public class EurecaController {
     }
 
     @GetMapping("/curriculo")
-    public CurriculoDTO getCurriculo(
+    public CurriculoSigDTO getCurriculo(
+            @RequestParam("curso") Integer codigoDoCurso,
+            @RequestParam("curriculo") String codigoDoCurriculo
+    ) {
+        return eurecaService.buscarCurriculo(codigoDoCurso,codigoDoCurriculo);
+    }
+
+    @GetMapping("/curriculo-ativo-mais-recente-scao")
+    public Integer getCurriculoAtivoMaisRecenteScao(
+            @RequestParam("curso") Integer codigoDoCurso
+    ) {
+        return eurecaService.buscarCodigoDoCurriculoAtivoMaisRecenteScao(codigoDoCurso);
+    }
+
+    @GetMapping("/curriculo-scao")
+    public CurriculoDTO getCurriculoScao(
             @RequestParam("curso") Integer codigoDoCurso,
             @RequestParam("curriculo") Integer codigoDoCurriculo
     ) {
-        return eurecaService.buscarCurriculo(codigoDoCurso,codigoDoCurriculo);
+        return eurecaService.buscarCurriculoScao(codigoDoCurso,codigoDoCurriculo);
     }
 
     @GetMapping("/disciplinas-de-um-curriculo")
@@ -125,6 +142,13 @@ public class EurecaController {
             @RequestParam("curriculo") String curriculo
     ) {
         return eurecaService.buscarRequisitos(disciplina,curso,curriculo);
+    }
+
+    @GetMapping("/area-de-retencao")
+    public String getAreaRetencaoDescricao(
+            @RequestParam("curso") String curso
+    ) {
+        return eurecaService.buscarAreaRetencaoDescricao(curso);
     }
 
 }

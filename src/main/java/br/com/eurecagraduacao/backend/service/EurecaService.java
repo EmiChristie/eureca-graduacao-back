@@ -3,20 +3,26 @@ package br.com.eurecagraduacao.backend.service;
 import br.com.eurecagraduacao.backend.dto.backend.DisciplinaRelacionadaDTO;
 import br.com.eurecagraduacao.backend.dto.backend.RequisitosDTO;
 import br.com.eurecagraduacao.backend.dto.eureca.*;
+import br.com.eurecagraduacao.backend.dto.sig.CurriculoSigDTO;
 import br.com.eurecagraduacao.backend.model.eureca.*;
 import br.com.eurecagraduacao.backend.model.sig.CursoSigModel;
+import br.com.eurecagraduacao.backend.model.sig.FullCurriculumSigModel;
 import br.com.eurecagraduacao.backend.util.Constants;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static br.com.eurecagraduacao.backend.util.Constants.*;
+import static br.com.eurecagraduacao.backend.util.MapeamentoCursos.getAreaDeRetencao;
+import static br.com.eurecagraduacao.backend.util.MapeamentoCursos.getCodigoMapeado;
 import static br.com.eurecagraduacao.backend.util.MapeamentoUtils.mapArea;
+import static java.lang.Integer.parseInt;
 
 @Service
 public class EurecaService {
@@ -111,12 +117,12 @@ public class EurecaService {
                 .toList();
     }
 
-    public CourseModel buscarCursoEspecifico(Integer codigoDoCurso) {
-        String url = baseUrl +
+    public CursoSigModel buscarCursoEspecifico(Integer codigoDoCurso) {
+        String url = dasSigUrl +
                 "/cursos" +
                 "?curso=" + codigoDoCurso;
 
-        ResponseEntity<List<CourseModel>> response = restTemplate.exchange(
+        ResponseEntity<List<CursoSigModel>> response = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
                 null,
@@ -124,7 +130,7 @@ public class EurecaService {
                 }
         );
 
-        List<CourseModel> cursos = response.getBody();
+        List<CursoSigModel> cursos = response.getBody();
         return (cursos != null && !cursos.isEmpty()) ? cursos.get(0) : null;
     }
 
@@ -158,10 +164,71 @@ public class EurecaService {
         }
     }
 
-    public CurriculoDTO buscarCurriculo(Integer codigoDoCurso, Integer codigoDoCurriculo) {
+    public CurriculoSigDTO buscarCurriculo(Integer codigoDoCurso, String codigoDoCurriculo) {
+        String url = dasSigUrl +
+                "/curriculos" +
+                "?curso=" + codigoDoCurso;
+
+        try {
+            ResponseEntity<List<FullCurriculumSigModel>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<>() {}
+            );
+
+            List<FullCurriculumSigModel> curriculos = response.getBody();
+
+            if (curriculos == null || curriculos.isEmpty()) {
+                return null;
+            }
+
+            return curriculos.stream()
+                    .filter(c -> c.getCodigoDoCurriculo().equals(codigoDoCurriculo))
+                    .findFirst()
+                    .map(CurriculoSigDTO::fromModel)
+                    .orElse(null);
+
+        } catch (HttpClientErrorException | HttpServerErrorException ex) {
+            System.err.println("Erro ao buscar currículos: " + ex.getStatusCode());
+            return null;
+        }
+    }
+
+    public Integer buscarCodigoDoCurriculoAtivoMaisRecenteScao(Integer codigoDoCurso) {
+        try {
+            String urlBuilder = baseUrl +
+                    "/curriculos/codigos-curriculo" +
+                    "?status=ATIVO" +
+                    "&curso=" + getCodigoMapeado(codigoDoCurso);
+
+            ResponseEntity<List<CurriculumCodeModel>> response = restTemplate.exchange(
+                    urlBuilder,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<>() {
+                    }
+            );
+
+            List<CurriculumCodeModel> curriculos = response.getBody();
+
+            if (curriculos == null || curriculos.isEmpty()) {
+                return null;
+            }
+
+            return curriculos.stream()
+                    .map(CurriculumCodeModel::getCodigoDoCurriculo)
+                    .max(Comparator.naturalOrder())
+                    .orElse(null);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public CurriculoDTO buscarCurriculoScao(Integer codigoDoCurso, Integer codigoDoCurriculo) {
         String url = baseUrl +
                 "/curriculos/curriculo" +
-                "?curso=" + codigoDoCurso +
+                "?curso=" + getCodigoMapeado(codigoDoCurso) +
                 "&curriculo=" + codigoDoCurriculo;
 
         ResponseEntity<FullCurriculumModel> response = restTemplate.exchange(
@@ -222,7 +289,7 @@ public class EurecaService {
             String semestreIdealStr = subject.getSemestreIdeal();
             Integer semestreIdeal = null;
             if (semestreIdealStr != null && !semestreIdealStr.isBlank()) {
-                semestreIdeal = Integer.parseInt(semestreIdealStr);
+                semestreIdeal = parseInt(semestreIdealStr);
             }
 
             return new DisciplinasCurriculoDTO(
@@ -440,6 +507,8 @@ public class EurecaService {
         return requisitosDTO;
     }
 
+
+
     private List<String> fetchCodigos(String url, String key) {
         try {
             ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
@@ -477,4 +546,7 @@ public class EurecaService {
         return new DisciplinaRelacionadaDTO("Desconhecida", codigo);
     }
 
+    public String buscarAreaRetencaoDescricao(String curso) {
+        return mapArea(getAreaDeRetencao(parseInt(curso)));
+    }
 }
