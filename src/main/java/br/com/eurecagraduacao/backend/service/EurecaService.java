@@ -14,8 +14,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static br.com.eurecagraduacao.backend.util.Constants.periodoAte;
-import static br.com.eurecagraduacao.backend.util.Constants.periodoDe;
+import static br.com.eurecagraduacao.backend.util.Constants.*;
 
 @Service
 public class EurecaService {
@@ -329,7 +328,7 @@ public class EurecaService {
 
 
     public OwnProfileDTO buscarUserInfo(String matricula, String token) {
-        String url = baseUrl + "/estudantes/estudante?estudante=" + matricula;
+        String url = dasSigUrl + "/estudantes/estudante?estudante=" + matricula;
 
         HttpHeaders headers = new HttpHeaders();
         headers.set("token-de-autenticacao", token);
