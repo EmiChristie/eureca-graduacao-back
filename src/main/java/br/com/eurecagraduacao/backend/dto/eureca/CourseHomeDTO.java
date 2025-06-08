@@ -1,7 +1,11 @@
 package br.com.eurecagraduacao.backend.dto.eureca;
 
-import br.com.eurecagraduacao.backend.model.eureca.CourseModel;
+import br.com.eurecagraduacao.backend.model.sig.CursoSigModel;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import static br.com.eurecagraduacao.backend.util.MapeamentoCursos.getAreaDeRetencao;
+import static br.com.eurecagraduacao.backend.util.MapeamentoUtils.mapArea;
+import static br.com.eurecagraduacao.backend.util.StringUtils.formatarNome;
 
 public class CourseHomeDTO {
 
@@ -36,44 +40,15 @@ public class CourseHomeDTO {
         this.curriculo = curriculo;
     }
 
-    public static CourseHomeDTO fromModel(CourseModel model, Integer curriculo) {
+    public static CourseHomeDTO fromModel(CursoSigModel model, Integer curriculo) {
         return new CourseHomeDTO(
                 model.getCodigoDoCurso(),
-                model.getDescricao(),
+                formatarNome(model.getDescricao()),
                 model.getCampus(),
-                model.getNomeDoCampus(),
-                model.getAreaDeRetencao(),
+                formatarNome(model.getNomeDoCampus()),
+                getAreaDeRetencao(model.getCodigoDoCurso()),
                 curriculo
         );
-    }
-
-    public String mapArea(Integer area){
-        if(area == null){
-            return "Sem registro";
-        }
-        return switch (area) {
-            case 1 -> "Medicina";
-            case 2 -> "Veterinária, Odontologia, Zootecnia";
-            case 3 -> "Ciências Exatas e da Terra";
-            case 4 -> "Ciências Biológicas";
-            case 5 -> "Engenharias";
-            case 6 -> "Tecnólogos";
-            case 7 -> "Nutrição, Farmácia";
-            case 8 -> "Ciências Agrárias";
-            case 9 -> "Ciências Exatas – Computação";
-            case 10 -> "Ciências Exatas – Matemática e Estatística";
-            case 11 -> "Arquitetura/Urbanismo";
-            case 12 -> "Artes";
-            case 13 -> "Música";
-            case 14 -> "Enfermagem, Fisioterapia, Fonoaudiologia e Educação Física";
-            case 15 -> "Ciências Sociais Aplicadas";
-            case 16 -> "Direito";
-            case 17 -> "Linguística e Letras";
-            case 18 -> "Ciências Humanas";
-            case 19 -> "Psicologia";
-            case 20 -> "Formação de Professor";
-            default -> "Sem registro";
-        };
     }
 
     @Override

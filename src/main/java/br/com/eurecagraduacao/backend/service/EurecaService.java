@@ -4,6 +4,7 @@ import br.com.eurecagraduacao.backend.dto.backend.DisciplinaRelacionadaDTO;
 import br.com.eurecagraduacao.backend.dto.backend.RequisitosDTO;
 import br.com.eurecagraduacao.backend.dto.eureca.*;
 import br.com.eurecagraduacao.backend.model.eureca.*;
+import br.com.eurecagraduacao.backend.model.sig.CursoSigModel;
 import br.com.eurecagraduacao.backend.util.Constants;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
@@ -15,6 +16,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static br.com.eurecagraduacao.backend.util.Constants.*;
+import static br.com.eurecagraduacao.backend.util.MapeamentoUtils.mapArea;
 
 @Service
 public class EurecaService {
@@ -84,23 +86,26 @@ public class EurecaService {
     }
 
     public List<CourseHomeDTO> buscarCursosAtivos() {
-        String url = baseUrl +
+        String url = dasSigUrl +
                 "/cursos" +
                 "?status=ATIVOS";
 
-        ResponseEntity<List<CourseModel>> response = restTemplate.exchange(
+        ResponseEntity<List<CursoSigModel>> response = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<List<CourseModel>>() {}
+                new ParameterizedTypeReference<>() {
+                }
         );
 
-        List<CourseModel> cursos = response.getBody();
+        List<CursoSigModel> cursos = response.getBody();
 
         assert cursos != null;
+        cursos = cursos.stream().filter(curso->curso.getGrauDoCurso().equalsIgnoreCase("GRADUAÇÂO")).toList();
         return cursos.stream()
                 .map(curso -> {
                     Integer codigoCurriculo = buscarCodigoDoCurriculoAtivoMaisRecente(curso.getCodigoDoCurso());
+                    System.out.println("curriculo retornado para o curso "+curso.getCodigoDoCurso()+": "+codigoCurriculo);
                     return CourseHomeDTO.fromModel(curso, codigoCurriculo);
                 })
                 .toList();
@@ -125,7 +130,7 @@ public class EurecaService {
 
     public Integer buscarCodigoDoCurriculoAtivoMaisRecente(Integer codigoDoCurso) {
         try {
-            String urlBuilder = baseUrl +
+            String urlBuilder = dasSigUrl +
                     "/curriculos/codigos-curriculo" +
                     "?status=ATIVO" +
                     "&curso=" + codigoDoCurso;
@@ -471,6 +476,5 @@ public class EurecaService {
         }
         return new DisciplinaRelacionadaDTO("Desconhecida", codigo);
     }
-
 
 }
