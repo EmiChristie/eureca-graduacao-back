@@ -10,6 +10,7 @@ public class Constants {
     public static String periodoDe = "2014.1";
     public static String periodoDeMetricasDisciplinas = "2019.1";
     public static String periodoAte = "2024.1";
+    public static String periodoAteScao = "2023.2";
 
     public static double limiteAtivos = 10.0; //10%
 

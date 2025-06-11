@@ -19,6 +19,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static br.com.eurecagraduacao.backend.util.Constants.*;
+import static br.com.eurecagraduacao.backend.util.MapeamentoCursos.getCodigoMapeado;
+import static java.lang.Integer.parseInt;
 
 @Service
 public class DisciplinaService {
@@ -305,11 +307,21 @@ public class DisciplinaService {
         return resultado;
     }
 
-
     private List<EnrollmentDTO> buscarMatriculas(String codigoDoCurso, String codigoDaDisciplina) {
+        List<EnrollmentDTO> matriculasScao = buscarMatriculasPorBaseUrl(dasUrl, String.valueOf(getCodigoMapeado(parseInt(codigoDoCurso))), codigoDaDisciplina,periodoDeMetricasDisciplinas,periodoAteScao);
+        List<EnrollmentDTO> matriculasSig = buscarMatriculasPorBaseUrl(dasSigUrl, codigoDoCurso, codigoDaDisciplina,periodoAte,"9999.9");
+
+        List<EnrollmentDTO> todasMatriculas = new ArrayList<>();
+        todasMatriculas.addAll(matriculasScao);
+        todasMatriculas.addAll(matriculasSig);
+
+        return todasMatriculas;
+    }
+
+    private List<EnrollmentDTO> buscarMatriculasPorBaseUrl(String baseUrl, String codigoDoCurso, String codigoDaDisciplina,String periodoDe, String periodoAte) {
         String url = baseUrl +
                 "/matriculas" +
-                "?periodo-de=" + periodoDeMetricasDisciplinas +
+                "?periodo-de=" + periodoDe +
                 "&periodo-ate=" + periodoAte +
                 "&curso=" + codigoDoCurso +
                 "&disciplina=" + codigoDaDisciplina;
@@ -323,8 +335,8 @@ public class DisciplinaService {
         );
 
         List<EnrollmentModel> enrollmentModels = response.getBody();
-
         assert enrollmentModels != null;
+
         return enrollmentModels.stream()
                 .map(EnrollmentDTO::fromModel)
                 .toList();
