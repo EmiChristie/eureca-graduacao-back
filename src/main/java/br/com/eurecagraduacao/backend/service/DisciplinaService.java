@@ -5,6 +5,7 @@ import br.com.eurecagraduacao.backend.dto.eureca.EnrollmentDTO;
 import br.com.eurecagraduacao.backend.dto.eureca.StudentDTO;
 import br.com.eurecagraduacao.backend.model.eureca.EnrollmentModel;
 import br.com.eurecagraduacao.backend.model.eureca.StudentModel;
+import br.com.eurecagraduacao.backend.model.sig.StudentSigModel;
 import br.com.eurecagraduacao.backend.util.CalculoUtils;
 import br.com.eurecagraduacao.backend.util.Constants;
 import br.com.eurecagraduacao.backend.util.SemestreUtils;
@@ -39,7 +40,7 @@ public class DisciplinaService {
         List<DisciplinaDistribuicaoNotasDTO> distribuicaoDeNotas = calcularDistribuicaoDeNotas(matriculas);
         List<DisciplinaDistribuicaoNotasFaixaDTO> distribuicaoDeNotasFaixa = calcularDistribuicaoDeNotasFaixa(matriculas);
         List<DisciplinaDistribuicaoNotasFaixaDTO> distribuicaoDeNotasFaixaDeAprovacao = calcularDistribuicaoDeNotasFaixaDeAprovacao(matriculas);
-        List<StudentDTO> estudantes = buscarEstudantes(codigoDoCurso);
+        List<StudentEssentialsDTO> estudantes = buscarEstudantes(codigoDoCurso);
         DisciplinaDistribuicaoPeriodosDTO distribuicaoDePeriodos = calcularDistribuicaoDePeriodos(matriculas,estudantes);
 
         MetricasDisciplinaDTO dto = new MetricasDisciplinaDTO();
@@ -237,7 +238,7 @@ public class DisciplinaService {
         return distribuicao;
     }
 
-    public DisciplinaDistribuicaoPeriodosDTO calcularDistribuicaoDePeriodos(List<EnrollmentDTO> matriculas, List<StudentDTO> estudantes) {
+    public DisciplinaDistribuicaoPeriodosDTO calcularDistribuicaoDePeriodos(List<EnrollmentDTO> matriculas, List<StudentEssentialsDTO> estudantes) {
         Map<Integer, Integer> distribuicaoPorPeriodo = new TreeMap<>();
         int totalMatriculas = matriculas.size();
         int estudantesEncontrados = 0;
@@ -246,8 +247,8 @@ public class DisciplinaService {
             String matriculaEstudante = matricula.getMatriculaDoEstudante();
             String periodoDisciplina = matricula.getPeriodo();
 
-            Optional<StudentDTO> estudanteOpt = estudantes.stream()
-                    .filter(e -> matriculaEstudante.equals(e.getMatricula()))
+            Optional<StudentEssentialsDTO> estudanteOpt = estudantes.stream()
+                    .filter(e -> matriculaEstudante.equals(e.getMatriculaDoEstudante()))
                     .findFirst();
 
             if (estudanteOpt.isPresent()) {
@@ -342,34 +343,60 @@ public class DisciplinaService {
                 .toList();
     }
 
-    public List<StudentDTO> buscarEstudantes(String codigoDoCurso) {
-        String url = baseUrl +
-                "/estudantes" +
+    public List<StudentEssentialsDTO> buscarEstudantes(String codigoDoCurso) {
+        String urlDas = dasUrl + "/estudantes" +
                 "?periodo-de-ingresso-de=" + periodoDe +
                 "&curso=" + codigoDoCurso;
 
+        String urlDasSig = dasSigUrl + "/estudantes" +
+                "?periodo-de-ingresso-de=" + periodoDe +
+                "&curso=" + codigoDoCurso;
+
+        List<StudentEssentialsDTO> resultadoFinal = new ArrayList<>();
+
         try {
             ResponseEntity<List<StudentModel>> response = restTemplate.exchange(
-                    url,
+                    urlDas,
                     HttpMethod.GET,
                     null,
                     new ParameterizedTypeReference<>() {}
             );
 
-            List<StudentModel> estudantes = response.getBody();
-            if (estudantes == null) {
-                return List.of();
+            List<StudentModel> estudantesDas = response.getBody();
+            if (estudantesDas != null) {
+                resultadoFinal.addAll(estudantesDas.stream()
+                        .map(StudentEssentialsDTO::fromModel)
+                        .toList());
             }
 
-            return estudantes.stream().map(StudentDTO::fromModel).toList();
-
         } catch (HttpClientErrorException e) {
-            if (e.getStatusCode().value() == 404) {
-                return List.of();
-            } else {
+            if (e.getStatusCode().value() != 404) {
                 throw e;
             }
         }
+
+        try {
+            ResponseEntity<List<StudentSigModel>> response = restTemplate.exchange(
+                    urlDasSig,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<>() {}
+            );
+
+            List<StudentSigModel> estudantesDasSig = response.getBody();
+            if (estudantesDasSig != null) {
+                resultadoFinal.addAll(estudantesDasSig.stream()
+                        .map(StudentEssentialsDTO::fromModelSig)
+                        .toList());
+            }
+
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode().value() != 404) {
+                throw e;
+            }
+        }
+
+        return resultadoFinal;
     }
 
 }
