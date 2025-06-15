@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 
 import static br.com.eurecagraduacao.backend.util.CalculoUtils.*;
 import static br.com.eurecagraduacao.backend.util.Constants.*;
+import static br.com.eurecagraduacao.backend.util.MapeamentoCursos.getCodigoMapeado;
 import static br.com.eurecagraduacao.backend.util.SemestreUtils.calcularNumeroPeriodo;
 import static br.com.eurecagraduacao.backend.util.SemestreUtils.parsePeriodo;
 
@@ -40,7 +41,7 @@ public class MetricasCursoService {
 
     public List<DisciplinaReprovacaoDTO> buscarDisciplinasQueMaisReprovam(Integer codigoDoCurso, Integer codigoDoCurriculo) {
 
-        String urlDisciplinas = baseUrl +
+        String urlDisciplinas = dasSigUrl +
                 "/disciplinas-por-curriculo" +
                 "?curso=" + codigoDoCurso +
                 "&curriculo=" + codigoDoCurriculo +
@@ -62,57 +63,93 @@ public class MetricasCursoService {
         List<DisciplinaReprovacaoDTO> resultado = new ArrayList<>();
 
         for (SubjectModel disciplina : disciplinas) {
+            List<EnrollmentModel> matriculasCombinadas = new ArrayList<>();
+
             try {
-                String urlMatriculas = baseUrl +
+                String urlMatriculasDas = dasUrl +
                         "/matriculas" +
                         "?periodo-de=" + Constants.periodoDeMetricasDisciplinas +
-                        "&periodo-ate=" + Constants.periodoAte +
-                        "&curso=" + codigoDoCurso +
+                        "&periodo-ate=" + periodoAteScao +
+                        "&curso=" + getCodigoMapeado(codigoDoCurso) +
                         "&disciplina=" + disciplina.getCodigoDaDisciplina();
 
-                ResponseEntity<List<EnrollmentModel>> matriculasResponse = restTemplate.exchange(
-                        urlMatriculas,
+                ResponseEntity<List<EnrollmentModel>> matriculasDasResponse = restTemplate.exchange(
+                        urlMatriculasDas,
                         HttpMethod.GET,
                         null,
                         new ParameterizedTypeReference<>() {}
                 );
 
-                List<EnrollmentModel> matriculas = matriculasResponse.getBody();
-
-                if (matriculas != null && !matriculas.isEmpty()) {
-                    long totalMatriculas = matriculas.size();
-                    long reprovacoes = matriculas.stream()
-                            .filter(m -> m.getStatus() != null && m.getStatus().toLowerCase().contains("reprovado"))
-                            .count();
-
-                    if (reprovacoes > 0) {
-                        BigDecimal porcentagem = BigDecimal.valueOf((reprovacoes * 100.0) / totalMatriculas)
-                                .setScale(2, RoundingMode.HALF_UP);
-
-                        resultado.add(new DisciplinaReprovacaoDTO(
-                                disciplina.getCodigoDaDisciplina(),
-                                disciplina.getNome(),
-                                (int) reprovacoes,
-                                (int) totalMatriculas,
-                                porcentagem
-                        ));
-                    }
+                List<EnrollmentModel> matriculasDas = matriculasDasResponse.getBody();
+                if (matriculasDas != null) {
+                    matriculasCombinadas.addAll(matriculasDas);
+                    System.out.println("Matrículas do SCAO recuperadas");
                 }
 
             } catch (HttpClientErrorException e) {
-                if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
-                    continue;
-                } else {
+                if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
+                    System.out.println("Deu um erro diferente de 404 nas matrículas do SCAO");
                     throw e;
+                }else{
+                    System.out.println("Deu erro 404 nas matrículas do SCAO");
+                }
+            }
+
+            try {
+                String urlMatriculasDasSig = dasSigUrl +
+                        "/matriculas" +
+                        "?periodo-de=" + Constants.periodoAte +
+                        "&curso=" + codigoDoCurso +
+                        "&disciplina=" + disciplina.getCodigoDaDisciplina();
+
+                ResponseEntity<List<EnrollmentModel>> matriculasDasSigResponse = restTemplate.exchange(
+                        urlMatriculasDasSig,
+                        HttpMethod.GET,
+                        null,
+                        new ParameterizedTypeReference<>() {}
+                );
+
+                List<EnrollmentModel> matriculasDasSig = matriculasDasSigResponse.getBody();
+                if (matriculasDasSig != null) {
+                    matriculasCombinadas.addAll(matriculasDasSig);
+                    System.out.println("Matrículas do SIG recuperadas");
+                }
+
+            } catch (HttpClientErrorException e) {
+                if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
+                    System.out.println("Deu um erro diferente de 404 nas matrículas do SIG");
+                    throw e;
+                }else{
+                    System.out.println("Deu erro 404 nas matrículas do SIG");
+                }
+            }
+
+            if (!matriculasCombinadas.isEmpty()) {
+                long totalMatriculas = matriculasCombinadas.size();
+                long reprovacoes = matriculasCombinadas.stream()
+                        .filter(m -> m.getStatus() != null && m.getStatus().toLowerCase().contains("reprovado"))
+                        .count();
+
+                if (reprovacoes > 0) {
+                    BigDecimal porcentagem = BigDecimal.valueOf((reprovacoes * 100.0) / totalMatriculas)
+                            .setScale(2, RoundingMode.HALF_UP);
+
+                    resultado.add(new DisciplinaReprovacaoDTO(
+                            disciplina.getCodigoDaDisciplina(),
+                            disciplina.getNome(),
+                            (int) reprovacoes,
+                            (int) totalMatriculas,
+                            porcentagem
+                    ));
                 }
             }
         }
 
         return resultado.stream()
-                .sorted(Comparator.comparing(DisciplinaReprovacaoDTO::getPorcentagemDeReprovacoes)
-                        .reversed())
+                .sorted(Comparator.comparing(DisciplinaReprovacaoDTO::getPorcentagemDeReprovacoes).reversed())
                 .collect(Collectors.toList());
     }
+
 
     public TaxaSucessoDTO getTaxaDeSucessoSimples(Integer codigoDoCurso) {
         List<StudentDTO> estudantes = buscarEstudantesGraduadosOuEvadidosPorCurso(codigoDoCurso);

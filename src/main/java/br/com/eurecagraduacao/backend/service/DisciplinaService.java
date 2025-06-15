@@ -346,7 +346,7 @@ public class DisciplinaService {
     public List<StudentEssentialsDTO> buscarEstudantes(String codigoDoCurso) {
         String urlDas = dasUrl + "/estudantes" +
                 "?periodo-de-ingresso-de=" + periodoDe +
-                "&curso=" + codigoDoCurso;
+                "&curso=" + getCodigoMapeado(Integer.valueOf(codigoDoCurso));
 
         String urlDasSig = dasSigUrl + "/estudantes" +
                 "?periodo-de-ingresso-de=" + periodoDe +
