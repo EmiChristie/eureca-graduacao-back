@@ -1,9 +1,12 @@
 package br.com.eurecagraduacao.backend.dto.eureca;
 
 import br.com.eurecagraduacao.backend.model.eureca.StudentModel;
+import br.com.eurecagraduacao.backend.model.sig.StudentSigModel;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
+
+import static br.com.eurecagraduacao.backend.util.CalculoUtils.round2;
 
 public class StudentDTO {
 
@@ -24,24 +27,6 @@ public class StudentDTO {
 
     @JsonProperty("cra")
     private Double cra;
-
-    @JsonProperty("mc")
-    private Double mc;
-
-    @JsonProperty("iech")
-    private Double iech;
-
-    @JsonProperty("iepl")
-    private Double iepl;
-
-    @JsonProperty("iea")
-    private Double iea;
-
-    @JsonProperty("mcn")
-    private Double mcn;
-
-    @JsonProperty("iean")
-    private Double iean;
 
     @JsonProperty("creditos_do_cra")
     private Integer creditosDoCra;
@@ -96,12 +81,6 @@ public class StudentDTO {
         dto.deficiencias = model.getDeficiencias();
         dto.politicaAfirmativa = model.getPoliticaAfirmativa();
         dto.cra = model.getCra();
-        dto.mc = model.getMc();
-        dto.iech = model.getIech();
-        dto.iepl = model.getIepl();
-        dto.iea = model.getIea();
-        dto.mcn = model.getMcn();
-        dto.iean = model.getIean();
         dto.creditosDoCra = model.getCreditosDoCra();
         dto.notasAcumuladas = model.getNotasAcumuladas();
         dto.periodosCompletados = model.getPeriodosCompletados();
@@ -116,6 +95,35 @@ public class StudentDTO {
         dto.situacao = model.getSituacao();
         dto.periodoDeEvasao = model.getPeriodoDeEvasao();
         dto.motivoDeEvasao = model.getMotivoDeEvasao();
+        dto.periodoDeIngresso = model.getPeriodoDeIngresso();
+        return dto;
+    }
+
+    public static StudentDTO fromSigModel(StudentSigModel model) {
+        StudentDTO dto = new StudentDTO();
+        dto.matricula = model.getMatriculaDoEstudante();
+        dto.sexo = (model.getSexo().equalsIgnoreCase("M") ? "MASCULINO" : "FEMININO");
+        dto.cor = model.getCor();
+        dto.deficiencias = model.getDeficienciasAsList();
+        dto.politicaAfirmativa = model.getPoliticaAfirmativa();
+        dto.creditosDoCra = model.getCreditosDoCra();
+        dto.notasAcumuladas = model.getNotasAcumuladas();
+        dto.cra = (dto.creditosDoCra > 0 ? round2(dto.notasAcumuladas/ dto.creditosDoCra) : 0);
+        dto.periodosCompletados = model.getPeriodosCompletados();
+        dto.creditosTentados = model.getCreditosTentados();
+        dto.creditosCompletados = model.getCreditosCompletados();
+        dto.creditosIsentos = model.getCreditosIsentos();
+        dto.creditosFalhados = model.getCreditosFalhados();
+        dto.creditosSuspensos = model.getCreditosSuspensos();
+        dto.creditosEmAndamento = model.getCreditosEmAndamento();
+        dto.velocidadeMedia = model.getVelocidadeMedia();
+        dto.taxaDeSucesso = model.getTaxaDeSucesso();
+        dto.situacao = (model.getSituacao().equalsIgnoreCase("ativo") ? "ATIVO" : "INATIVO");
+        dto.periodoDeEvasao = model.getPeriodoDeEvasao();
+        dto.motivoDeEvasao =   (model.getSituacao().equalsIgnoreCase("ativo") ? "REGULAR" :
+                                model.getSituacao().equalsIgnoreCase("CONCLUÍDO") ||
+                                model.getSituacao().equalsIgnoreCase("FORMADO") ? "GRADUADO" :
+                                "EVADIDO");
         dto.periodoDeIngresso = model.getPeriodoDeIngresso();
         return dto;
     }
@@ -153,10 +161,10 @@ public class StudentDTO {
     }
 
     public String getSituacao(){return situacao;}
-    
+
     public Double getVelocidadeMedia(){return velocidadeMedia;}
-    
+
     public Double getTaxaDeSucesso(){return taxaDeSucesso;}
-    
+
     public Double getCra(){return cra;}
 }

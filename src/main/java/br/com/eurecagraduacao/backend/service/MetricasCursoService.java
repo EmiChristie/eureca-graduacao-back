@@ -3,10 +3,13 @@ package br.com.eurecagraduacao.backend.service;
 import br.com.eurecagraduacao.backend.dto.backend.*;
 import br.com.eurecagraduacao.backend.dto.eureca.CurriculoDTO;
 import br.com.eurecagraduacao.backend.dto.eureca.StudentDTO;
+import br.com.eurecagraduacao.backend.dto.sig.CurriculoSigDTO;
 import br.com.eurecagraduacao.backend.model.eureca.EnrollmentModel;
 import br.com.eurecagraduacao.backend.model.eureca.FullCurriculumModel;
 import br.com.eurecagraduacao.backend.model.eureca.StudentModel;
 import br.com.eurecagraduacao.backend.model.eureca.SubjectModel;
+import br.com.eurecagraduacao.backend.model.sig.FullCurriculumSigModel;
+import br.com.eurecagraduacao.backend.model.sig.StudentSigModel;
 import br.com.eurecagraduacao.backend.util.CalculoUtils;
 import br.com.eurecagraduacao.backend.util.Constants;
 import br.com.eurecagraduacao.backend.util.SemestreUtils;
@@ -28,6 +31,7 @@ import static br.com.eurecagraduacao.backend.util.Constants.*;
 import static br.com.eurecagraduacao.backend.util.MapeamentoCursos.getCodigoMapeado;
 import static br.com.eurecagraduacao.backend.util.SemestreUtils.calcularNumeroPeriodo;
 import static br.com.eurecagraduacao.backend.util.SemestreUtils.parsePeriodo;
+import static java.lang.Integer.parseInt;
 
 @Service
 public class MetricasCursoService {
@@ -218,7 +222,7 @@ public class MetricasCursoService {
         }
     }
 
-
+/*
     public MetricasCursoCompletasDTO getMetricasDeSucessoCompletas(Integer codigoDoCurso) {
         List<StudentDTO> estudantes = buscarEstudantesGraduadosOuEvadidosPorCurso(codigoDoCurso);
         List<StudentDTO> graduados = estudantes.stream().filter(e->e.getMotivoDeEvasao().equals("GRADUADO")).toList();
@@ -283,7 +287,7 @@ public class MetricasCursoService {
             return 0;
         }
 
-        Double media = estudantes.stream()
+        double media = estudantes.stream()
                 .map(StudentDTO::getCreditosFalhados)
                 .filter(Objects::nonNull)
                 .mapToInt(Integer::intValue)
@@ -419,29 +423,48 @@ public class MetricasCursoService {
                 })
                 .toList();
     }
-
+*/
     private List<StudentDTO> buscarIngressantesPorPeriodo(Integer codigoDoCurso, String periodo) {
-        String url = baseUrl +
+        int ano = parseInt(periodo.substring(0,3));
+
+        String url = (ano < 2024 ? dasUrl : dasSigUrl) +
                 "/estudantes" +
                 "?periodo-de-ingresso-de=" + periodo +
                 "&periodo-de-ingresso-ate=" + periodo +
                 //"&pagina=1&tamanho=10" +  para fins de teste
-                "&curso=" + codigoDoCurso;
+                "&curso=" + (ano < 2024 ? getCodigoMapeado(codigoDoCurso) : codigoDoCurso);
 
         try {
-            ResponseEntity<List<StudentModel>> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<>() {}
-            );
+            if(ano < 2024){
+                ResponseEntity<List<StudentModel>> response = restTemplate.exchange(
+                        url,
+                        HttpMethod.GET,
+                        null,
+                        new ParameterizedTypeReference<>() {}
+                );
 
-            List<StudentModel> estudantes = response.getBody();
-            if (estudantes == null) {
-                return List.of();
+                List<StudentModel> estudantes = response.getBody();
+                if (estudantes == null) {
+                    return List.of();
+                }
+
+                return estudantes.stream().map(StudentDTO::fromModel).toList();
+            }else{
+                ResponseEntity<List<StudentSigModel>> response = restTemplate.exchange(
+                        url,
+                        HttpMethod.GET,
+                        null,
+                        new ParameterizedTypeReference<>() {}
+                );
+
+                List<StudentSigModel> estudantes = response.getBody();
+                if (estudantes == null) {
+                    return List.of();
+                }
+
+                return estudantes.stream().map(StudentDTO::fromSigModel).toList();
             }
 
-            return estudantes.stream().map(StudentDTO::fromModel).toList();
 
         } catch (HttpClientErrorException e) {
             if (e.getStatusCode().value() == 404) {
@@ -454,7 +477,7 @@ public class MetricasCursoService {
 
     public Map<String, List<StudentDTO>> getEstudantes(Integer curso) {
         String periodoAtual = periodoDe;
-        Map<String, List<StudentDTO>> estudantesPorPeriodo = new LinkedHashMap<>(); // mantém ordem de inserção
+        Map<String, List<StudentDTO>> estudantesPorPeriodo = new LinkedHashMap<>();
 
         while (true) {
             List<StudentDTO> estudantes = buscarIngressantesPorPeriodo(curso, periodoAtual);
@@ -484,7 +507,7 @@ public class MetricasCursoService {
 
     public Map<String, List<StudentDTO>> getEstudantes2(Integer curso,String periodoInicial) {
         String periodoAtual = SemestreUtils.proximoSemestre(periodoInicial);
-        Map<String, List<StudentDTO>> estudantesPorPeriodo = new LinkedHashMap<>(); // mantém ordem de inserção
+        Map<String, List<StudentDTO>> estudantesPorPeriodo = new LinkedHashMap<>();
 
         while (parsePeriodo(periodoAtual) <= parsePeriodo(periodoAte)) {
             List<StudentDTO> estudantes = buscarIngressantesPorPeriodo(curso, periodoAtual);
@@ -494,13 +517,6 @@ public class MetricasCursoService {
                 continue;
             }
 
-            long total = estudantes.size();
-            long ativos = estudantes.stream()
-                    .filter(e -> e.getSituacao() != null && e.getSituacao().equalsIgnoreCase("ativo"))
-                    .count();
-
-            double porcentagemAtivos = (ativos * 100.0) / total;
-
             estudantesPorPeriodo.put(periodoAtual, estudantes);
             periodoAtual = SemestreUtils.proximoSemestre(periodoAtual);
         }
@@ -508,7 +524,7 @@ public class MetricasCursoService {
         return estudantesPorPeriodo;
     }
 
-    public MetricasCursoDTO getMetricasCurso(Integer curso, Integer curriculo) {
+    public MetricasCursoDTO getMetricasCurso(Integer curso, String curriculo) {
         Map<String, List<StudentDTO>> estudantesPorPeriodo = getEstudantes(curso);
         int qtdPeriodos = estudantesPorPeriodo.keySet().size();
         String ultimoPeriodoAnalisado = (String) estudantesPorPeriodo.keySet().toArray()[qtdPeriodos-1];
@@ -612,7 +628,8 @@ public class MetricasCursoService {
 
         double erro = totalAlunos > 0 ? CalculoUtils.round2((totalAtivos * 100.0) / totalAlunos) : 0.0;
 
-        CurriculoDTO curriculoDTO = buscarCurriculo(curso,curriculo);
+        CurriculoSigDTO curriculoDTO = buscarCurriculo(curso,curriculo);
+        System.out.println(curriculoDTO);
         MediaPeriodosDTO mediaPeriodos = calcularMediaPeriodosFormatura(estudantesPorPeriodo,curriculoDTO.getDuracaoMinima(),curriculoDTO.getDuracaoMaxima());
 
         List<TaxasCalculadasGraduadosDTO> taxas = calcularTaxasGraduados(estudantesPorPeriodo,curriculoDTO.getDuracaoMinima(),curriculoDTO.getDuracaoMaxima());
@@ -850,7 +867,7 @@ public class MetricasCursoService {
         int finalTotalGraduados = totalGraduados;
         contagemAgrupada.entrySet().stream()
                 .filter(e -> !e.getKey().equals(grupoMenor) && !e.getKey().equals(grupoMaior))
-                .sorted(Comparator.comparingInt(e -> Integer.parseInt(e.getKey())))
+                .sorted(Comparator.comparingInt(e -> parseInt(e.getKey())))
                 .forEach(entry -> {
                     distribuicao.add(criarDTO(entry.getKey()+" períodos", entry.getValue(), finalTotalGraduados));
                 });
@@ -938,11 +955,11 @@ public class MetricasCursoService {
         resultado.sort(Comparator.comparingInt(dto -> {
             String chave = dto.getQuantidade_de_periodos();
             if (chave.endsWith("ou menos")) {
-                return Integer.parseInt(chave.split(" ")[0]) - 1;
+                return parseInt(chave.split(" ")[0]) - 1;
             } else if (chave.endsWith("ou mais")) {
-                return Integer.parseInt(chave.split(" ")[0]) + 1;
+                return parseInt(chave.split(" ")[0]) + 1;
             } else {
-                return Integer.parseInt(chave);
+                return parseInt(chave);
             }
         }));
 
@@ -1013,23 +1030,48 @@ public class MetricasCursoService {
         return dto;
     }
 
+    public CurriculoSigDTO buscarCurriculo(Integer codigoDoCurso, String codigoDoCurriculo) {
+        String url = dasSigUrl + "/curriculos?curso=" + codigoDoCurso;
 
-    public CurriculoDTO buscarCurriculo(Integer codigoDoCurso, Integer codigoDoCurriculo) {
-        String url = baseUrl +
-                "/curriculos/curriculo" +
-                "?curso=" + codigoDoCurso +
-                "&curriculo=" + codigoDoCurriculo;
-
-        ResponseEntity<FullCurriculumModel> response = restTemplate.exchange(
+        ResponseEntity<List<FullCurriculumSigModel>> response = restTemplate.exchange(
                 url,
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {}
         );
 
-        FullCurriculumModel curriculo = response.getBody();
-        assert curriculo != null;
-        return CurriculoDTO.fromModel(curriculo);
+        List<FullCurriculumSigModel> curriculos = response.getBody();
+
+        if (curriculos == null || curriculos.isEmpty()) {
+            throw new NoSuchElementException("Nenhum currículo encontrado para o curso " + codigoDoCurso);
+        }
+
+        return curriculos.stream()
+                .filter(c -> codigoDoCurriculo.equals(c.getCodigoDoCurriculo()))
+                .findFirst()
+                .map(CurriculoSigDTO::fromModel)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Currículo " + codigoDoCurriculo + " não encontrado para o curso " + codigoDoCurso));
     }
+
+    /* sem funcionar por causa do bug no endpoint de currículos do das-sig
+    public CurriculoSigDTO buscarCurriculo(Integer codigoDoCurso, String codigoDoCurriculo) {
+        String url = dasSigUrl +
+                "/curriculos/curriculo" +
+                "?curso=" + codigoDoCurso +
+                "&curriculo=" + codigoDoCurriculo;
+
+        ResponseEntity<FullCurriculumSigModel> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        FullCurriculumSigModel curriculo = response.getBody();
+        assert curriculo != null;
+        return CurriculoSigDTO.fromModel(curriculo);
+    }
+    */
 
 }
