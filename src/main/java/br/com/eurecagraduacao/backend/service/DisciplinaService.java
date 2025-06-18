@@ -73,6 +73,8 @@ public class DisciplinaService {
             if (matricula.getStatus().equalsIgnoreCase("aprovado") &&
                     matricula.getTipo().equalsIgnoreCase("dispensa")) {
                 chave = "Dispensados";
+            } else if (matricula.getStatus().equalsIgnoreCase("dispensado")) {
+                chave = "Dispensados";
             } else if (matricula.getStatus().equalsIgnoreCase("aprovado")) {
                 chave = "Aprovados";
             } else if (matricula.getStatus().equalsIgnoreCase("reprovado por falta")) {
