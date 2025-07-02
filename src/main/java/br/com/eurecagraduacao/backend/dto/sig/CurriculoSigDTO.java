@@ -51,6 +51,9 @@ public class CurriculoSigDTO {
     @JsonProperty("numero_disciplinas_minimo")
     private Integer numeroDisciplinasMinimo;
 
+    @JsonProperty("carga_horaria_extensao")
+    private Integer cargaHorariaExtensao;
+
     public Integer getCodigoDoCurso() {
         return codigoDoCurso;
     }
@@ -171,6 +174,14 @@ public class CurriculoSigDTO {
         this.numeroDisciplinasMinimo = numeroDisciplinasMinimo;
     }
 
+    public Integer getCargaHorariaExtensao() {
+        return cargaHorariaExtensao;
+    }
+
+    public void setCargaHorariaExtensao(Integer cargaHorariaExtensao) {
+        this.cargaHorariaExtensao = cargaHorariaExtensao;
+    }
+
     public static CurriculoSigDTO fromModel(FullCurriculumSigModel model) {
         CurriculoSigDTO dto = new CurriculoSigDTO();
         dto.setCodigoDoCurso(model.getCodigoDoCurso());
@@ -188,6 +199,7 @@ public class CurriculoSigDTO {
         dto.setNumeroDisciplinasObrigatoriasMinimo(model.getNumeroDisciplinasObrigatoriasMinimo());
         dto.setNumeroDisciplinasOptativasMinimo(model.getNumeroDisciplinasOptativasMinimo());
         dto.setNumeroDisciplinasMinimo(model.getNumeroDisciplinasMinimo());
+        dto.setCargaHorariaExtensao(model.getCargaHorariaExtensao());
         return dto;
     }
 }
