@@ -49,7 +49,7 @@ public class EurecaController {
     }
 
     @GetMapping("/curriculo-ativo-mais-recente")
-    public Integer getCurriculoAtivoMaisRecente(
+    public String getCurriculoAtivoMaisRecente(
             @RequestParam("curso") Integer codigoDoCurso
     ) {
         return eurecaService.buscarCodigoDoCurriculoAtivoMaisRecente(codigoDoCurso);

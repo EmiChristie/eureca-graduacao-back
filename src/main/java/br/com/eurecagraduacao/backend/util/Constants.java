@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 public class Constants {
 
-    public static String dominio = "lsd";
+    public static String dominio = "sti";
     public static String dasUrl = "https://eureca."+dominio+".ufcg.edu.br/das/v2/";
     public static String dasSigUrl = "https://eureca."+dominio+".ufcg.edu.br/das-sig/v1/";
     public static String periodoDe = "2014.1";
