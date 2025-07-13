@@ -48,8 +48,8 @@ public class MetricasCursoService {
         String urlDisciplinas = dasSigUrl +
                 "/disciplinas-por-curriculo" +
                 "?curso=" + codigoDoCurso +
-                "&curriculo=" + codigoDoCurriculo +
-                "&tipo-da-disciplina=OBRIGATORIO";
+                "&curriculo=" + codigoDoCurriculo;
+                //"&tipo-da-disciplina=OBRIGATORIO";
 
         ResponseEntity<List<SubjectModel>> disciplinasResponse = restTemplate.exchange(
                 urlDisciplinas,
