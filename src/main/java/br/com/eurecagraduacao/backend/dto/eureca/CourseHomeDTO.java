@@ -28,9 +28,9 @@ public class CourseHomeDTO {
     private String areaDeRetencaoDesc;
 
     @JsonProperty("codigo_do_curriculo")
-    private Integer curriculo;
+    private String curriculo;
 
-    public CourseHomeDTO(Integer codigoDoCurso, String descricao, Integer campus, String nomeDoCampus, Integer areaDeRetencao, Integer curriculo) {
+    public CourseHomeDTO(Integer codigoDoCurso, String descricao, Integer campus, String nomeDoCampus, Integer areaDeRetencao, String curriculo) {
         this.codigoDoCurso = codigoDoCurso;
         this.descricao = descricao;
         this.campus = campus;
@@ -40,7 +40,7 @@ public class CourseHomeDTO {
         this.curriculo = curriculo;
     }
 
-    public static CourseHomeDTO fromModel(CursoSigModel model, Integer curriculo) {
+    public static CourseHomeDTO fromModel(CursoSigModel model, String curriculo) {
         return new CourseHomeDTO(
                 model.getCodigoDoCurso(),
                 formatarNome(model.getDescricao()),

@@ -5,6 +5,7 @@ import br.com.eurecagraduacao.backend.dto.backend.RequisitosDTO;
 import br.com.eurecagraduacao.backend.dto.eureca.*;
 import br.com.eurecagraduacao.backend.dto.sig.CurriculoSigDTO;
 import br.com.eurecagraduacao.backend.model.eureca.*;
+import br.com.eurecagraduacao.backend.model.sig.CurriculumCodeSigModel;
 import br.com.eurecagraduacao.backend.model.sig.CursoSigModel;
 import br.com.eurecagraduacao.backend.model.sig.FullCurriculumSigModel;
 import br.com.eurecagraduacao.backend.util.Constants;
@@ -110,7 +111,7 @@ public class EurecaService {
         cursos = cursos.stream().filter(curso->curso.getGrauDoCurso().equalsIgnoreCase("GRADUAÇÂO")).toList();
         return cursos.stream()
                 .map(curso -> {
-                    Integer codigoCurriculo = buscarCodigoDoCurriculoAtivoMaisRecente(curso.getCodigoDoCurso());
+                    String codigoCurriculo = buscarCodigoDoCurriculoAtivoMaisRecente(curso.getCodigoDoCurso());
                     System.out.println("curriculo retornado para o curso "+curso.getCodigoDoCurso()+": "+codigoCurriculo);
                     return CourseHomeDTO.fromModel(curso, codigoCurriculo);
                 })
@@ -134,14 +135,14 @@ public class EurecaService {
         return (cursos != null && !cursos.isEmpty()) ? cursos.get(0) : null;
     }
 
-    public Integer buscarCodigoDoCurriculoAtivoMaisRecente(Integer codigoDoCurso) {
+    public String buscarCodigoDoCurriculoAtivoMaisRecente(Integer codigoDoCurso) {
         try {
             String urlBuilder = dasSigUrl +
                     "/curriculos/codigos-curriculo" +
                     "?status=ATIVO" +
                     "&curso=" + codigoDoCurso;
 
-            ResponseEntity<List<CurriculumCodeModel>> response = restTemplate.exchange(
+            ResponseEntity<List<CurriculumCodeSigModel>> response = restTemplate.exchange(
                     urlBuilder,
                     HttpMethod.GET,
                     null,
@@ -149,20 +150,22 @@ public class EurecaService {
                     }
             );
 
-            List<CurriculumCodeModel> curriculos = response.getBody();
+            List<CurriculumCodeSigModel> curriculos = response.getBody();
 
             if (curriculos == null || curriculos.isEmpty()) {
                 return null;
             }
 
             return curriculos.stream()
-                    .map(CurriculumCodeModel::getCodigoDoCurriculo)
+                    .map(CurriculumCodeSigModel::getCodigoDoCurriculo)
                     .max(Comparator.naturalOrder())
                     .orElse(null);
         } catch (Exception e) {
+            e.printStackTrace();
             return null;
         }
     }
+
 
     public CurriculoSigDTO buscarCurriculo(Integer codigoDoCurso, String codigoDoCurriculo) {
         String url = dasSigUrl +

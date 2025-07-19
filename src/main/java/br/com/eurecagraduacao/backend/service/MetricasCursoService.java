@@ -10,6 +10,7 @@ import br.com.eurecagraduacao.backend.model.eureca.StudentModel;
 import br.com.eurecagraduacao.backend.model.eureca.SubjectModel;
 import br.com.eurecagraduacao.backend.model.sig.FullCurriculumSigModel;
 import br.com.eurecagraduacao.backend.model.sig.StudentSigModel;
+import br.com.eurecagraduacao.backend.model.sig.SubjectSigModel;
 import br.com.eurecagraduacao.backend.util.CalculoUtils;
 import br.com.eurecagraduacao.backend.util.Constants;
 import br.com.eurecagraduacao.backend.util.SemestreUtils;
@@ -43,22 +44,22 @@ public class MetricasCursoService {
         this.restTemplate = new RestTemplate();
     }
 
-    public List<DisciplinaReprovacaoDTO> buscarDisciplinasQueMaisReprovam(Integer codigoDoCurso, Integer codigoDoCurriculo) {
+    public List<DisciplinaReprovacaoDTO> buscarDisciplinasQueMaisReprovam(Integer codigoDoCurso, String codigoDoCurriculo) {
 
         String urlDisciplinas = dasSigUrl +
                 "/disciplinas-por-curriculo" +
                 "?curso=" + codigoDoCurso +
-                "&curriculo=" + codigoDoCurriculo +
-                "&tipo-da-disciplina=OBRIGATORIO";
+                "&curriculo=" + codigoDoCurriculo;
+                //"&tipo-da-disciplina=OBRIGATORIO";
 
-        ResponseEntity<List<SubjectModel>> disciplinasResponse = restTemplate.exchange(
+        ResponseEntity<List<SubjectSigModel>> disciplinasResponse = restTemplate.exchange(
                 urlDisciplinas,
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {}
         );
 
-        List<SubjectModel> disciplinas = disciplinasResponse.getBody();
+        List<SubjectSigModel> disciplinas = disciplinasResponse.getBody();
 
         if (disciplinas == null || disciplinas.isEmpty()) {
             return List.of();
@@ -66,7 +67,7 @@ public class MetricasCursoService {
 
         List<DisciplinaReprovacaoDTO> resultado = new ArrayList<>();
 
-        for (SubjectModel disciplina : disciplinas) {
+        for (SubjectSigModel disciplina : disciplinas) {
             List<EnrollmentModel> matriculasCombinadas = new ArrayList<>();
 
             try {
@@ -624,12 +625,12 @@ public class MetricasCursoService {
         double mediaMulheresEntreGraduados = CalculoUtils.calcularMedia(porcentagensMulheresPorPeriodo);
         double desvioMulheresEntreGraduados = CalculoUtils.calcularDesvioPadrao(porcentagensMulheresPorPeriodo, mediaMulheresEntreGraduados);
 
-        List<PeriodoEvasaoDTO> periodosEvasao = calcularDistribuicaoEvasaoPorPeriodo(estudantesPorPeriodo);
 
         double erro = totalAlunos > 0 ? CalculoUtils.round2((totalAtivos * 100.0) / totalAlunos) : 0.0;
 
         CurriculoSigDTO curriculoDTO = buscarCurriculo(curso,curriculo);
         System.out.println(curriculoDTO);
+        List<PeriodoEvasaoDTO> periodosEvasao = calcularDistribuicaoEvasaoPorPeriodo(estudantesPorPeriodo,curriculoDTO.getDuracaoMinima());
         MediaPeriodosDTO mediaPeriodos = calcularMediaPeriodosFormatura(estudantesPorPeriodo,curriculoDTO.getDuracaoMinima(),curriculoDTO.getDuracaoMaxima());
 
         List<TaxasCalculadasGraduadosDTO> taxas = calcularTaxasGraduados(estudantesPorPeriodo,curriculoDTO.getDuracaoMinima(),curriculoDTO.getDuracaoMaxima());
@@ -737,7 +738,8 @@ public class MetricasCursoService {
         return resultado;
     }
 
-    public List<PeriodoEvasaoDTO> calcularDistribuicaoEvasaoPorPeriodo(Map<String, List<StudentDTO>> estudantesPorPeriodo) {
+    public List<PeriodoEvasaoDTO> calcularDistribuicaoEvasaoPorPeriodo(Map<String, List<StudentDTO>> estudantesPorPeriodo,
+                                                                       int duracaoMinima) {
         Map<Integer, Integer> evasoesPorPeriodo = new HashMap<>();
         int totalEvadidos = 0;
 
@@ -758,36 +760,29 @@ public class MetricasCursoService {
             }
         }
 
-        int finalTotalEvadidos = totalEvadidos;
-        List<PeriodoEvasaoDTO> todasEvasoes = evasoesPorPeriodo.entrySet().stream()
-                .map(entry -> {
-                    int periodo = entry.getKey();
-                    int quantidade = entry.getValue();
-                    double porcentagem = finalTotalEvadidos > 0 ? (quantidade * 100.0) / finalTotalEvadidos : 0.0;
-                    return new PeriodoEvasaoDTO(periodo+"º período", quantidade, CalculoUtils.round2(porcentagem));
-                })
-                .sorted(Comparator.comparingDouble(PeriodoEvasaoDTO::getPorcentagemEvadidos).reversed())
-                .toList();
+        Map<Integer, PeriodoEvasaoDTO> resultadoPorPeriodo = new TreeMap<>();
+        int acimaQuantidade = 0;
+        double acimaPorcentagem = 0.0;
 
-        List<PeriodoEvasaoDTO> resultadoFinal = new ArrayList<>();
-        int outrosQuantidade = 0;
-        double outrosPorcentagem = 0.0;
+        for (Map.Entry<Integer, Integer> entry : evasoesPorPeriodo.entrySet()) {
+            int periodo = entry.getKey();
+            int quantidade = entry.getValue();
+            double porcentagem = totalEvadidos > 0 ? (quantidade * 100.0) / totalEvadidos : 0.0;
 
-        for (int i = 0; i < todasEvasoes.size(); i++) {
-            if (i < qtdPeriodosEvasao) {
-                resultadoFinal.add(todasEvasoes.get(i));
+            if (periodo <= duracaoMinima) {
+                String label = periodo + "º período";
+                resultadoPorPeriodo.put(periodo, new PeriodoEvasaoDTO(label, quantidade, CalculoUtils.round2(porcentagem)));
             } else {
-                outrosQuantidade += todasEvasoes.get(i).getQuantidadeEvadidos();
-                outrosPorcentagem += todasEvasoes.get(i).getPorcentagemEvadidos();
+                acimaQuantidade += quantidade;
+                acimaPorcentagem += porcentagem;
             }
         }
 
-        if (outrosQuantidade > 0) {
-            resultadoFinal.add(new PeriodoEvasaoDTO(
-                    "Outros períodos",
-                    outrosQuantidade,
-                    CalculoUtils.round2(outrosPorcentagem)
-            ));
+        List<PeriodoEvasaoDTO> resultadoFinal = new ArrayList<>(resultadoPorPeriodo.values());
+
+        if (acimaQuantidade > 0) {
+            String labelAcima = "Após o " + duracaoMinima + "º período";
+            resultadoFinal.add(new PeriodoEvasaoDTO(labelAcima, acimaQuantidade, CalculoUtils.round2(acimaPorcentagem)));
         }
 
         return resultadoFinal;
