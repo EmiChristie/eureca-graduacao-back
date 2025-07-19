@@ -10,6 +10,7 @@ import br.com.eurecagraduacao.backend.model.eureca.StudentModel;
 import br.com.eurecagraduacao.backend.model.eureca.SubjectModel;
 import br.com.eurecagraduacao.backend.model.sig.FullCurriculumSigModel;
 import br.com.eurecagraduacao.backend.model.sig.StudentSigModel;
+import br.com.eurecagraduacao.backend.model.sig.SubjectSigModel;
 import br.com.eurecagraduacao.backend.util.CalculoUtils;
 import br.com.eurecagraduacao.backend.util.Constants;
 import br.com.eurecagraduacao.backend.util.SemestreUtils;
@@ -43,7 +44,7 @@ public class MetricasCursoService {
         this.restTemplate = new RestTemplate();
     }
 
-    public List<DisciplinaReprovacaoDTO> buscarDisciplinasQueMaisReprovam(Integer codigoDoCurso, Integer codigoDoCurriculo) {
+    public List<DisciplinaReprovacaoDTO> buscarDisciplinasQueMaisReprovam(Integer codigoDoCurso, String codigoDoCurriculo) {
 
         String urlDisciplinas = dasSigUrl +
                 "/disciplinas-por-curriculo" +
@@ -51,14 +52,14 @@ public class MetricasCursoService {
                 "&curriculo=" + codigoDoCurriculo;
                 //"&tipo-da-disciplina=OBRIGATORIO";
 
-        ResponseEntity<List<SubjectModel>> disciplinasResponse = restTemplate.exchange(
+        ResponseEntity<List<SubjectSigModel>> disciplinasResponse = restTemplate.exchange(
                 urlDisciplinas,
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {}
         );
 
-        List<SubjectModel> disciplinas = disciplinasResponse.getBody();
+        List<SubjectSigModel> disciplinas = disciplinasResponse.getBody();
 
         if (disciplinas == null || disciplinas.isEmpty()) {
             return List.of();
@@ -66,7 +67,7 @@ public class MetricasCursoService {
 
         List<DisciplinaReprovacaoDTO> resultado = new ArrayList<>();
 
-        for (SubjectModel disciplina : disciplinas) {
+        for (SubjectSigModel disciplina : disciplinas) {
             List<EnrollmentModel> matriculasCombinadas = new ArrayList<>();
 
             try {

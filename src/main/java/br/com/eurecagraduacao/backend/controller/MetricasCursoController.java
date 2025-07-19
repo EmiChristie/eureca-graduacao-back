@@ -23,7 +23,7 @@ public class MetricasCursoController {
     @GetMapping("/disciplinas-que-mais-reprovam")
     public List<DisciplinaReprovacaoDTO> buscarDisciplinasQueMaisReprovam(
             @RequestParam Integer curso,
-            @RequestParam Integer curriculo
+            @RequestParam String curriculo
     ) {
         return metricasCursoService.buscarDisciplinasQueMaisReprovam(curso, curriculo);
     }
