@@ -29,16 +29,16 @@ public class DesempenhoAlunoService {
         this.restTemplate = new RestTemplate();
     }
 
-    public ResultadoFdaDTO calcularFdas(Integer codigoCurso, Integer codigoCurriculo, StudentDTO alunoAtual) {
+    public ResultadoFdaDTO calcularFdas(Integer codigoCurso, Integer codigoCurriculo, StudentDTO alunoAtual, Double velocidadeMaxima) {
         List<StudentDTO> estudantes = buscarEstudantesAtivos(codigoCurso, codigoCurriculo);
 
         List<StudentDTO> ativos = estudantes.stream()
                 .filter(a -> "ATIVO".equalsIgnoreCase(a.getSituacao()))
                 .toList();
 
-        MetricaFdaDTO craFda = calcularMetricaFda(ativos, StudentDTO::getCra, alunoAtual.getCra());
-        MetricaFdaDTO velocidadeFda = calcularMetricaFda(ativos, StudentDTO::getVelocidadeMedia, alunoAtual.getVelocidadeMedia());
-        MetricaFdaDTO taxaFda = calcularMetricaFda(ativos, StudentDTO::getTaxaDeSucesso, alunoAtual.getTaxaDeSucesso());
+        MetricaFdaDTO craFda = calcularMetricaFda(ativos, StudentDTO::getCra, alunoAtual.getCra(), null);
+        MetricaFdaDTO velocidadeFda = calcularMetricaFda(ativos, StudentDTO::getVelocidadeMedia, alunoAtual.getVelocidadeMedia(), velocidadeMaxima);
+        MetricaFdaDTO taxaFda = calcularMetricaFda(ativos, StudentDTO::getTaxaDeSucesso, alunoAtual.getTaxaDeSucesso(), null);
 
         ResultadoFdaDTO resultado = new ResultadoFdaDTO();
         resultado.setCra(craFda);
@@ -50,11 +50,13 @@ public class DesempenhoAlunoService {
 
     private MetricaFdaDTO calcularMetricaFda(List<StudentDTO> alunos,
                                              Function<StudentDTO, Double> extrator,
-                                             Double valorDoAluno) {
+                                             Double valorDoAluno,
+                                             Double teto) {
 
         List<Double> valores = alunos.stream()
                 .map(extrator)
                 .filter(Objects::nonNull)
+                .map(v -> (teto != null && v > teto) ? teto : v)
                 .sorted()
                 .toList();
 
@@ -82,7 +84,8 @@ public class DesempenhoAlunoService {
             fda.add(new PontoFdaDTO(entry.getKey(), probAcumulada));
         }
 
-        long menoresOuIguais = valores.stream().filter(v -> v <= valorDoAluno).count();
+        Double valorConsiderado = (teto != null && valorDoAluno > teto) ? teto : valorDoAluno;
+        long menoresOuIguais = valores.stream().filter(v -> v <= valorConsiderado).count();
         double percentil = (double) menoresOuIguais / total;
 
         MetricaFdaDTO metrica = new MetricaFdaDTO();

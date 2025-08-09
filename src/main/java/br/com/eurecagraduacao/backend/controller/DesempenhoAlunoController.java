@@ -22,7 +22,8 @@ public class DesempenhoAlunoController {
             @RequestParam Integer codigoCurriculo,
             @RequestParam Double cra,
             @RequestParam Double velocidadeMedia,
-            @RequestParam Double taxaDeSucesso
+            @RequestParam Double taxaDeSucesso,
+            @RequestParam Double velocidadeMaxima
     ) {
         StudentDTO aluno = new StudentDTO();
         aluno.setCra(cra);
@@ -31,7 +32,7 @@ public class DesempenhoAlunoController {
         aluno.setSituacao("ATIVO");
 
         ResultadoFdaDTO resultado = desempenhoAlunoService.calcularFdas(
-                codigoCurso, codigoCurriculo, aluno
+                codigoCurso, codigoCurriculo, aluno,velocidadeMaxima
         );
 
         return ResponseEntity.ok(resultado);
