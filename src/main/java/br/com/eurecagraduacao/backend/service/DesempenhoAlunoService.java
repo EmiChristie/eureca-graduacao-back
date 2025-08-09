@@ -14,6 +14,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -66,18 +67,19 @@ public class DesempenhoAlunoService {
             return metricaVazia;
         }
 
-        List<PontoFdaDTO> fda = new ArrayList<>();
-        double countAcumulado = 0;
-        Double valorAnterior = null;
+        Map<Double, Long> frequencias = valores.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        v -> v,
+                        java.util.TreeMap::new,
+                        java.util.stream.Collectors.counting()
+                ));
 
-        for (int i = 0; i < total; i++) {
-            Double valorAtual = valores.get(i);
-            if (!valorAtual.equals(valorAnterior)) {
-                countAcumulado = i + 1;
-                double probAcumulada = countAcumulado / total;
-                fda.add(new PontoFdaDTO(valorAtual, probAcumulada));
-                valorAnterior = valorAtual;
-            }
+        double acumulado = 0;
+        List<PontoFdaDTO> fda = new ArrayList<>();
+        for (Map.Entry<Double, Long> entry : frequencias.entrySet()) {
+            acumulado += entry.getValue();
+            double probAcumulada = acumulado / total;
+            fda.add(new PontoFdaDTO(entry.getKey(), probAcumulada));
         }
 
         long menoresOuIguais = valores.stream().filter(v -> v <= valorDoAluno).count();
@@ -90,7 +92,6 @@ public class DesempenhoAlunoService {
 
         return metrica;
     }
-
 
     public List<StudentDTO> buscarEstudantesAtivos(Integer codigoDoCurso, Integer codigoDoCurriculo) {
         String url = dasSigUrl +
