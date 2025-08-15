@@ -167,4 +167,21 @@ public class StudentDTO {
     public Double getTaxaDeSucesso(){return taxaDeSucesso;}
 
     public Double getCra(){return cra;}
+
+    public void setCra(Double cra) {
+        this.cra = cra;
+    }
+
+    public void setVelocidadeMedia(Double velocidadeMedia) {
+        this.velocidadeMedia = velocidadeMedia;
+    }
+
+    public void setTaxaDeSucesso(Double taxaDeSucesso) {
+        this.taxaDeSucesso = taxaDeSucesso;
+    }
+
+    public void setSituacao(String situacao) {
+        this.situacao = situacao;
+    }
+
 }
