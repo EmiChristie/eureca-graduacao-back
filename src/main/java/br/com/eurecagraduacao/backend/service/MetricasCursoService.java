@@ -1,0 +1,870 @@
+package br.com.eurecagraduacao.backend.service;
+
+import br.com.eurecagraduacao.backend.dto.backend.*;
+import br.com.eurecagraduacao.backend.dto.eureca.CurriculoDTO;
+import br.com.eurecagraduacao.backend.dto.eureca.StudentDTO;
+import br.com.eurecagraduacao.backend.dto.sig.CurriculoSigDTO;
+import br.com.eurecagraduacao.backend.model.eureca.EnrollmentModel;
+import br.com.eurecagraduacao.backend.model.eureca.FullCurriculumModel;
+import br.com.eurecagraduacao.backend.model.eureca.StudentModel;
+import br.com.eurecagraduacao.backend.model.eureca.SubjectModel;
+import br.com.eurecagraduacao.backend.model.sig.FullCurriculumSigModel;
+import br.com.eurecagraduacao.backend.model.sig.StudentSigModel;
+import br.com.eurecagraduacao.backend.model.sig.SubjectSigModel;
+import br.com.eurecagraduacao.backend.util.CalculoUtils;
+import br.com.eurecagraduacao.backend.util.Constants;
+import br.com.eurecagraduacao.backend.util.SemestreUtils;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestTemplate;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static br.com.eurecagraduacao.backend.util.CalculoUtils.*;
+import static br.com.eurecagraduacao.backend.util.Constants.*;
+import static br.com.eurecagraduacao.backend.util.MapeamentoCursos.getCodigoMapeado;
+import static br.com.eurecagraduacao.backend.util.SemestreUtils.calcularNumeroPeriodo;
+import static br.com.eurecagraduacao.backend.util.SemestreUtils.parsePeriodo;
+import static java.lang.Integer.parseInt;
+
+@Service
+public class MetricasCursoService {
+
+    private final String baseUrl = Constants.dasUrl;
+    private final RestTemplate restTemplate;
+
+    public MetricasCursoService() {
+        this.restTemplate = new RestTemplate();
+    }
+
+    public List<DisciplinaReprovacaoDTO> buscarDisciplinasQueMaisReprovam(Integer codigoDoCurso, String codigoDoCurriculo) {
+
+        String urlDisciplinas = dasSigUrl +
+                "/disciplinas-por-curriculo" +
+                "?curso=" + codigoDoCurso +
+                "&curriculo=" + codigoDoCurriculo;
+                //"&tipo-da-disciplina=OBRIGATORIO";
+
+        ResponseEntity<List<SubjectSigModel>> disciplinasResponse = restTemplate.exchange(
+                urlDisciplinas,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        List<SubjectSigModel> disciplinas = disciplinasResponse.getBody();
+
+        if (disciplinas == null || disciplinas.isEmpty()) {
+            return List.of();
+        }
+
+        List<DisciplinaReprovacaoDTO> resultado = new ArrayList<>();
+
+        for (SubjectSigModel disciplina : disciplinas) {
+            List<EnrollmentModel> matriculasCombinadas = new ArrayList<>();
+
+            try {
+                String urlMatriculasDas = dasUrl +
+                        "/matriculas" +
+                        "?periodo-de=" + Constants.periodoDeMetricasDisciplinas +
+                        "&periodo-ate=" + periodoAteScao +
+                        "&curso=" + getCodigoMapeado(codigoDoCurso) +
+                        "&disciplina=" + disciplina.getCodigoDaDisciplina();
+
+                ResponseEntity<List<EnrollmentModel>> matriculasDasResponse = restTemplate.exchange(
+                        urlMatriculasDas,
+                        HttpMethod.GET,
+                        null,
+                        new ParameterizedTypeReference<>() {}
+                );
+
+                List<EnrollmentModel> matriculasDas = matriculasDasResponse.getBody();
+                if (matriculasDas != null) {
+                    matriculasCombinadas.addAll(matriculasDas);
+                    System.out.println("Matrículas do SCAO recuperadas");
+                }
+
+            } catch (HttpClientErrorException e) {
+                if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
+                    System.out.println("Deu um erro diferente de 404 nas matrículas do SCAO");
+                    throw e;
+                }else{
+                    System.out.println("Deu erro 404 nas matrículas do SCAO");
+                }
+            }
+
+            try {
+                String urlMatriculasDasSig = dasSigUrl +
+                        "/matriculas" +
+                        "?periodo-de=" + Constants.periodoAte +
+                        "&curso=" + codigoDoCurso +
+                        "&disciplina=" + disciplina.getCodigoDaDisciplina();
+
+                ResponseEntity<List<EnrollmentModel>> matriculasDasSigResponse = restTemplate.exchange(
+                        urlMatriculasDasSig,
+                        HttpMethod.GET,
+                        null,
+                        new ParameterizedTypeReference<>() {}
+                );
+
+                List<EnrollmentModel> matriculasDasSig = matriculasDasSigResponse.getBody();
+                if (matriculasDasSig != null) {
+                    matriculasCombinadas.addAll(matriculasDasSig);
+                    System.out.println("Matrículas do SIG recuperadas");
+                }
+
+            } catch (HttpClientErrorException e) {
+                if (e.getStatusCode() != HttpStatus.NOT_FOUND) {
+                    System.out.println("Deu um erro diferente de 404 nas matrículas do SIG");
+                    throw e;
+                }else{
+                    System.out.println("Deu erro 404 nas matrículas do SIG");
+                }
+            }
+
+            if (!matriculasCombinadas.isEmpty()) {
+                long totalMatriculas = matriculasCombinadas.size();
+                long reprovacoes = matriculasCombinadas.stream()
+                        .filter(m -> m.getStatus() != null && m.getStatus().toLowerCase().contains("reprovado"))
+                        .count();
+
+                if (reprovacoes > 0) {
+                    BigDecimal porcentagem = BigDecimal.valueOf((reprovacoes * 100.0) / totalMatriculas)
+                            .setScale(2, RoundingMode.HALF_UP);
+
+                    resultado.add(new DisciplinaReprovacaoDTO(
+                            disciplina.getCodigoDaDisciplina(),
+                            disciplina.getNome(),
+                            (int) reprovacoes,
+                            (int) totalMatriculas,
+                            porcentagem
+                    ));
+                }
+            }
+        }
+
+        return resultado.stream()
+                .sorted(Comparator.comparing(DisciplinaReprovacaoDTO::getPorcentagemDeReprovacoes).reversed())
+                .collect(Collectors.toList());
+    }
+
+
+    public TaxaSucessoDTO getTaxaDeSucessoSimples(Integer codigoDoCurso) {
+        List<StudentDTO> estudantes = buscarEstudantesGraduadosOuEvadidosPorCurso(codigoDoCurso);
+
+        int graduados = 0;
+        int evadidos = 0;
+        Map<String, Integer> motivoEvasaoContador = new HashMap<>();
+
+        for (StudentDTO estudante : estudantes) {
+            String motivo = estudante.getMotivoDeEvasao();
+
+            if ("GRADUADO".equalsIgnoreCase(motivo)) {
+                graduados++;
+            } else {
+                evadidos++;
+                if (motivo != null && !motivo.isBlank()) {
+                    motivoEvasaoContador.merge(motivo, 1, Integer::sum);
+                }
+            }
+        }
+
+        int total = graduados + evadidos;
+        double taxaDeSucesso = total > 0
+                ? BigDecimal.valueOf((double) graduados / total)
+                .setScale(2, RoundingMode.HALF_UP)
+                .doubleValue()
+                : 0.0;
+
+        String motivoMaisComum = motivoEvasaoContador.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(null);
+
+        return new TaxaSucessoDTO(taxaDeSucesso, graduados, evadidos, motivoMaisComum);
+    }
+
+    private List<StudentDTO> buscarEstudantesGraduadosOuEvadidosPorCurso(Integer codigoDoCurso) {
+        String url = baseUrl +
+                "/estudantes" +
+                "?periodo-de-evasao-de=" + periodoDe +
+                "&periodo-de-evasao-ate=" + periodoAte +
+                //"&pagina=1&tamanho=10" +  para fins de teste
+                "&curso=" + codigoDoCurso;
+
+        try {
+            ResponseEntity<List<StudentModel>> response = restTemplate.exchange(
+                    url,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<>() {}
+            );
+
+            List<StudentModel> estudantes = response.getBody();
+            if (estudantes == null) {
+                return List.of();
+            }
+
+            return estudantes.stream().map(StudentDTO::fromModel).toList();
+
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode().value() == 404) {
+                return List.of();
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    private List<StudentDTO> buscarIngressantesPorPeriodo(Integer codigoDoCurso, String periodo) {
+        int ano = parseInt(periodo.substring(0,3));
+
+        String url = (ano < 2024 ? dasUrl : dasSigUrl) +
+                "/estudantes" +
+                "?periodo-de-ingresso-de=" + periodo +
+                "&periodo-de-ingresso-ate=" + periodo +
+                //"&pagina=1&tamanho=10" +  para fins de teste
+                "&curso=" + (ano < 2024 ? getCodigoMapeado(codigoDoCurso) : codigoDoCurso);
+
+        try {
+            if(ano < 2024){
+                ResponseEntity<List<StudentModel>> response = restTemplate.exchange(
+                        url,
+                        HttpMethod.GET,
+                        null,
+                        new ParameterizedTypeReference<>() {}
+                );
+
+                List<StudentModel> estudantes = response.getBody();
+                if (estudantes == null) {
+                    return List.of();
+                }
+
+                return estudantes.stream().map(StudentDTO::fromModel).toList();
+            }else{
+                ResponseEntity<List<StudentSigModel>> response = restTemplate.exchange(
+                        url,
+                        HttpMethod.GET,
+                        null,
+                        new ParameterizedTypeReference<>() {}
+                );
+
+                List<StudentSigModel> estudantes = response.getBody();
+                if (estudantes == null) {
+                    return List.of();
+                }
+
+                return estudantes.stream().map(StudentDTO::fromSigModel).toList();
+            }
+
+
+        } catch (HttpClientErrorException e) {
+            if (e.getStatusCode().value() == 404) {
+                return List.of();
+            } else {
+                throw e;
+            }
+        }
+    }
+
+    public Map<String, List<StudentDTO>> getEstudantes(Integer curso) {
+        String periodoAtual = periodoDe;
+        Map<String, List<StudentDTO>> estudantesPorPeriodo = new LinkedHashMap<>();
+
+        while (true) {
+            List<StudentDTO> estudantes = buscarIngressantesPorPeriodo(curso, periodoAtual);
+
+            if (estudantes.isEmpty()) {
+                periodoAtual = SemestreUtils.proximoSemestre(periodoAtual);
+                continue;
+            }
+
+            long total = estudantes.size();
+            long ativos = estudantes.stream()
+                    .filter(e -> e.getSituacao() != null && e.getSituacao().equalsIgnoreCase("ativo"))
+                    .count();
+
+            double porcentagemAtivos = (ativos * 100.0) / total;
+
+            if (porcentagemAtivos > limiteAtivos) {
+                break;
+            }
+
+            estudantesPorPeriodo.put(periodoAtual, estudantes);
+            periodoAtual = SemestreUtils.proximoSemestre(periodoAtual);
+        }
+
+        return estudantesPorPeriodo;
+    }
+
+    public Map<String, List<StudentDTO>> getEstudantes2(Integer curso,String periodoInicial) {
+        String periodoAtual = SemestreUtils.proximoSemestre(periodoInicial);
+        Map<String, List<StudentDTO>> estudantesPorPeriodo = new LinkedHashMap<>();
+
+        while (parsePeriodo(periodoAtual) <= parsePeriodo(periodoAte)) {
+            List<StudentDTO> estudantes = buscarIngressantesPorPeriodo(curso, periodoAtual);
+
+            if (estudantes.isEmpty()) {
+                periodoAtual = SemestreUtils.proximoSemestre(periodoAtual);
+                continue;
+            }
+
+            estudantesPorPeriodo.put(periodoAtual, estudantes);
+            periodoAtual = SemestreUtils.proximoSemestre(periodoAtual);
+        }
+
+        return estudantesPorPeriodo;
+    }
+
+    public MetricasCursoDTO getMetricasCurso(Integer curso, String curriculo) {
+        Map<String, List<StudentDTO>> estudantesPorPeriodo = getEstudantes(curso);
+        int qtdPeriodos = estudantesPorPeriodo.keySet().size();
+        String ultimoPeriodoAnalisado = (String) estudantesPorPeriodo.keySet().toArray()[qtdPeriodos-1];
+        Map<String, List<StudentDTO>> estudantesPorPeriodoComMaisDe10PorCentoDeAtivos = getEstudantes2(curso,ultimoPeriodoAnalisado);
+        List<CursoPeriodoMetricasDTO> metricas = new ArrayList<>();
+        List<Double> taxasDeSucesso = new ArrayList<>();
+        List<Double> taxasMulheres = new ArrayList<>();
+        List<Double> porcentagensMulheresPorPeriodo = new ArrayList<>();
+        List<Integer> ingressantesPorPeriodo = new ArrayList<>();
+        List<Integer> mulheresIngressantesPorPeriodo = new ArrayList<>();
+        List<Integer> graduadosPorPeriodo = new ArrayList<>();
+
+        int totalGraduados = 0;
+        int totalMulheresGraduadas = 0;
+        int totalAlunos = 0;
+        int totalAtivos = 0;
+        int totalMulheresIngressantes = 0;
+        int totalHomensIngressantes = 0;
+
+        for (Map.Entry<String, List<StudentDTO>> entrada : estudantesPorPeriodo.entrySet()) {
+            String periodo = entrada.getKey();
+            List<StudentDTO> estudantes = entrada.getValue();
+
+            Map<String, Integer> contagens = calculaGraduadosEvadidosEAtivos(estudantes);
+
+            int total = estudantes.size();
+            int ativos = contagens.getOrDefault("ativos", 0);
+            int graduados = contagens.getOrDefault("graduados", 0);
+            int evadidos = contagens.getOrDefault("evadidos", 0);
+            int mulheresIngressantes = contagens.getOrDefault("mulheresIngressantes", 0);
+            int mulheresGraduadas = contagens.getOrDefault("mulheresGraduadas", 0);
+
+            int totalIngressantes = estudantes.size();
+            int homensIngressantes = totalIngressantes - mulheresIngressantes;
+
+            totalAlunos += total;
+            totalAtivos += ativos;
+            totalMulheresIngressantes+=mulheresIngressantes;
+            totalHomensIngressantes+=homensIngressantes;
+
+            double taxaSucesso = total > 0 ? (graduados * 100.0) / total : 0.0;
+            double taxaSucessoMulheres = total > 0 ? (mulheresGraduadas * 100.0) / total : 0.0;
+            double taxaMulheresEntreGraduados = graduados > 0 ? (mulheresGraduadas * 100.0) / graduados : 0.0;
+
+            ingressantesPorPeriodo.add(totalIngressantes);
+            mulheresIngressantesPorPeriodo.add(mulheresIngressantes);
+            graduadosPorPeriodo.add(graduados);
+            taxasDeSucesso.add(taxaSucesso);
+            taxasMulheres.add(taxaSucessoMulheres);
+            if (taxaMulheresEntreGraduados > 0) {
+                porcentagensMulheresPorPeriodo.add(taxaMulheresEntreGraduados);
+            }
+
+            totalGraduados += graduados;
+            totalMulheresGraduadas += mulheresGraduadas;
+
+            metricas.add(new CursoPeriodoMetricasDTO(
+                    periodo,
+                    ativos,
+                    graduados,
+                    evadidos,
+                    mulheresIngressantes,
+                    mulheresGraduadas,
+                    total
+            ));
+        }
+
+        for (Map.Entry<String, List<StudentDTO>> entrada : estudantesPorPeriodoComMaisDe10PorCentoDeAtivos.entrySet()) {
+            String periodo = entrada.getKey();
+            List<StudentDTO> estudantes = entrada.getValue();
+
+            Map<String, Integer> contagens = calculaGraduadosEvadidosEAtivos(estudantes);
+
+            int total = estudantes.size();
+            int ativos = contagens.getOrDefault("ativos", 0);
+            int graduados = contagens.getOrDefault("graduados", 0);
+            int evadidos = contagens.getOrDefault("evadidos", 0);
+            int mulheresIngressantes = contagens.getOrDefault("mulheresIngressantes", 0);
+            int mulheresGraduadas = contagens.getOrDefault("mulheresGraduadas", 0);
+
+            metricas.add(new CursoPeriodoMetricasDTO(
+                    periodo,
+                    ativos,
+                    graduados,
+                    evadidos,
+                    mulheresIngressantes,
+                    mulheresGraduadas,
+                    total
+            ));
+        }
+
+        double mediaGeral = CalculoUtils.calcularMedia(taxasDeSucesso);
+        double desvioGeral = CalculoUtils.calcularDesvioPadrao(taxasDeSucesso, mediaGeral);
+        double percentualDesvioGeral = mediaGeral > 0 ? CalculoUtils.round2(desvioGeral) : 0.0;
+        double mediaMulheres = CalculoUtils.calcularMedia(taxasMulheres);
+        double desvioMulheres = CalculoUtils.calcularDesvioPadrao(taxasMulheres, mediaMulheres);
+        double mediaMulheresEntreGraduados = CalculoUtils.calcularMedia(porcentagensMulheresPorPeriodo);
+        double desvioMulheresEntreGraduados = CalculoUtils.calcularDesvioPadrao(porcentagensMulheresPorPeriodo, mediaMulheresEntreGraduados);
+
+
+        double erro = totalAlunos > 0 ? CalculoUtils.round2((totalAtivos * 100.0) / totalAlunos) : 0.0;
+
+        CurriculoSigDTO curriculoDTO = buscarCurriculo(curso,curriculo);
+        System.out.println(curriculoDTO);
+        List<PeriodoEvasaoDTO> periodosEvasao = calcularDistribuicaoEvasaoPorPeriodo(estudantesPorPeriodo,curriculoDTO.getDuracaoMinima());
+        MediaPeriodosDTO mediaPeriodos = calcularMediaPeriodosFormatura(estudantesPorPeriodo,curriculoDTO.getDuracaoMinima(),curriculoDTO.getDuracaoMaxima());
+
+        List<TaxasCalculadasGraduadosDTO> taxas = calcularTaxasGraduados(estudantesPorPeriodo,curriculoDTO.getDuracaoMinima(),curriculoDTO.getDuracaoMaxima());
+
+        TaxasCalculadasGraduadosGlobaisDTO taxasGlobais = calcularTaxasGraduadosGlobais(estudantesPorPeriodo);
+
+        List<Double> quantidadeCreditosMedia = calcularQtdMediaCreditos(estudantesPorPeriodo);
+
+        double mediaIngressantes = Math.round(CalculoUtils.calcularMediaInteiros(ingressantesPorPeriodo));
+        double mediaMulheresIngressantes = CalculoUtils.calcularMediaInteiros(mulheresIngressantesPorPeriodo);
+        double mediaHomensIngressantes = mediaIngressantes - mediaMulheresIngressantes;
+
+        double mediaGraduados = Math.round(CalculoUtils.calcularMediaInteiros(graduadosPorPeriodo));
+        double mediaEvadidos = mediaIngressantes - mediaGraduados;
+
+        double porcentagemMulheresGraduadasMulheres = totalMulheresIngressantes > 0
+                ? CalculoUtils.round2((totalMulheresGraduadas * 100.0) / totalMulheresIngressantes)
+                : 0.0;
+
+        double porcentagemHomensGraduadosHomens = totalHomensIngressantes > 0
+                ? CalculoUtils.round2(((totalGraduados - totalMulheresGraduadas) * 100.0) / totalHomensIngressantes)
+                : 0.0;
+
+        double desvioIngressantes = CalculoUtils.calcularDesvioPadraoInteiros(ingressantesPorPeriodo, mediaIngressantes);
+        double desvioMulheresIngressantes = CalculoUtils.calcularDesvioPadraoInteiros(mulheresIngressantesPorPeriodo, mediaMulheresIngressantes);
+        double desvioGraduados = CalculoUtils.calcularDesvioPadraoInteiros(graduadosPorPeriodo, mediaGraduados);
+
+
+        PerfilAlunoMedioDTO alunoMedio = new PerfilAlunoMedioDTO();
+        alunoMedio.setCra_medio(taxasGlobais.getCra_medio_global());
+        alunoMedio.setVelocidade_media(taxasGlobais.getVelocidade_media_global());
+        alunoMedio.setTaxa_de_sucesso_media(taxasGlobais.getTaxa_de_sucesso_media_global());
+        alunoMedio.setQuantidade_de_periodos_media(mediaPeriodos.getQuantidade_media_periodos_para_se_formar());
+        alunoMedio.setCreditos_matriculados_media(quantidadeCreditosMedia.get(0));
+        alunoMedio.setCreditos_reprovados_media(quantidadeCreditosMedia.get(1));
+
+
+        MetricasCursoDTO dto = new MetricasCursoDTO();
+        dto.setCodigoDoCurso(curso);
+        dto.setGraduados_evadidos_e_ativos_por_periodo(metricas);
+        dto.setTaxaDeSucessoMedia(CalculoUtils.round2(mediaGeral));
+        dto.setDesvioPadraoPercentual(percentualDesvioGeral);
+        dto.setTaxaSucessoMediaMulheres(CalculoUtils.round2(mediaMulheres));
+        dto.setDesvioPadraoPercentualMulheres(CalculoUtils.round2(desvioMulheres));
+        dto.setDesvioPadraoPercentualGenero(CalculoUtils.round2(desvioMulheresEntreGraduados));
+        dto.setPorcentagemMulheresEntreGraduados(CalculoUtils.round2(mediaMulheresEntreGraduados));
+        dto.setPorcentagemHomensEntreGraduados(CalculoUtils.round2(100.0 - mediaMulheresEntreGraduados));
+        dto.setPeriodosEvasao(periodosEvasao);
+        dto.setErro(erro);
+        dto.setMediaPeriodos(mediaPeriodos);
+        dto.setTaxasGraduados(taxas);
+        dto.setTaxasGlobais(taxasGlobais);
+        dto.setAlunoMedio(alunoMedio);
+        dto.setPorcentagemMediaMulheresGraduadasMulheres(porcentagemMulheresGraduadasMulheres);
+        dto.setPorcentagemMediaHomensGraduadosHomens(porcentagemHomensGraduadosHomens);
+        dto.setQuantidadeMediaIngressantes(CalculoUtils.round2(mediaIngressantes));
+        dto.setQuantidadeMediaGraduados(CalculoUtils.round2(mediaGraduados));
+        dto.setQuantidadeMediaEvadidos(CalculoUtils.round2(mediaEvadidos));
+        dto.setQuantidadeMediaMulheresIngressantes(CalculoUtils.round2(mediaMulheresIngressantes));
+        dto.setQuantidadeMediaHomensIngressantes(CalculoUtils.round2(mediaHomensIngressantes));
+        dto.setDesvioPadraoIngressantes(CalculoUtils.round2(desvioIngressantes));
+        dto.setDesvioPadraoMulheresIngressantes(CalculoUtils.round2(desvioMulheresIngressantes));
+        dto.setDesvioPadraoGraduados(CalculoUtils.round2(desvioGraduados));
+
+        return dto;
+    }
+
+
+    private Map<String, Integer> calculaGraduadosEvadidosEAtivos(List<StudentDTO> estudantes) {
+        int ativos = 0;
+        int graduados = 0;
+        int evadidos = 0;
+        int mulheresIngressantes = 0;
+        int mulheresGraduadas = 0;
+
+        for (StudentDTO estudante : estudantes) {
+            String situacao = estudante.getSituacao();
+
+            if(estudante.getSexo().equalsIgnoreCase("FEMININO")){
+                mulheresIngressantes++;
+            }
+
+            if (situacao == null) continue;
+
+            if (situacao.equalsIgnoreCase("ativo")) {
+                ativos++;
+            } else {
+                if ("graduado".equalsIgnoreCase(estudante.getMotivoDeEvasao())) {
+                    graduados++;
+                    if ("FEMININO".equalsIgnoreCase(estudante.getSexo())) {
+                        mulheresGraduadas++;
+                    }
+                } else {
+                    evadidos++;
+                }
+            }
+        }
+
+        Map<String, Integer> resultado = new HashMap<>();
+        resultado.put("ativos", ativos);
+        resultado.put("graduados", graduados);
+        resultado.put("evadidos", evadidos);
+        resultado.put("mulheresIngressantes", mulheresIngressantes);
+        resultado.put("mulheresGraduadas", mulheresGraduadas);
+        return resultado;
+    }
+
+    public List<PeriodoEvasaoDTO> calcularDistribuicaoEvasaoPorPeriodo(Map<String, List<StudentDTO>> estudantesPorPeriodo,
+                                                                       int duracaoMinima) {
+        Map<Integer, Integer> evasoesPorPeriodo = new HashMap<>();
+        int totalEvadidos = 0;
+
+        for (Map.Entry<String, List<StudentDTO>> entrada : estudantesPorPeriodo.entrySet()) {
+            for (StudentDTO estudante : entrada.getValue()) {
+                String situacao = estudante.getSituacao();
+                if (situacao == null || situacao.equalsIgnoreCase("ativo")) continue;
+                if ("graduado".equalsIgnoreCase(estudante.getMotivoDeEvasao())) continue;
+
+                String ingresso = estudante.getPeriodoDeIngresso();
+                String evasao = estudante.getPeriodoDeEvasao();
+
+                if (ingresso == null || evasao == null) continue;
+
+                int numeroPeriodo = calcularNumeroPeriodo(ingresso, evasao);
+                evasoesPorPeriodo.merge(numeroPeriodo, 1, Integer::sum);
+                totalEvadidos++;
+            }
+        }
+
+        Map<Integer, PeriodoEvasaoDTO> resultadoPorPeriodo = new TreeMap<>();
+        int acimaQuantidade = 0;
+        double acimaPorcentagem = 0.0;
+
+        for (Map.Entry<Integer, Integer> entry : evasoesPorPeriodo.entrySet()) {
+            int periodo = entry.getKey();
+            int quantidade = entry.getValue();
+            double porcentagem = totalEvadidos > 0 ? (quantidade * 100.0) / totalEvadidos : 0.0;
+
+            if (periodo <= duracaoMinima) {
+                String label = periodo + "º período";
+                resultadoPorPeriodo.put(periodo, new PeriodoEvasaoDTO(label, quantidade, CalculoUtils.round2(porcentagem)));
+            } else {
+                acimaQuantidade += quantidade;
+                acimaPorcentagem += porcentagem;
+            }
+        }
+
+        List<PeriodoEvasaoDTO> resultadoFinal = new ArrayList<>(resultadoPorPeriodo.values());
+
+        if (acimaQuantidade > 0) {
+            String labelAcima = "Após o " + duracaoMinima + "º período";
+            resultadoFinal.add(new PeriodoEvasaoDTO(labelAcima, acimaQuantidade, CalculoUtils.round2(acimaPorcentagem)));
+        }
+
+        return resultadoFinal;
+    }
+
+    public MediaPeriodosDTO calcularMediaPeriodosFormatura(
+            Map<String, List<StudentDTO>> estudantesPorPeriodo,
+            int duracaoMinima,
+            int duracaoMaxima
+    ) {
+        int somaPeriodos = 0;
+        int totalGraduados = 0;
+        Map<String, Integer> contagemAgrupada = new HashMap<>();
+
+        for (List<StudentDTO> estudantes : estudantesPorPeriodo.values()) {
+            for (StudentDTO estudante : estudantes) {
+                if ("graduado".equalsIgnoreCase(estudante.getMotivoDeEvasao())) {
+                    Integer periodos = estudante.getPeriodosCompletados();
+                    if (periodos != null) {
+                        somaPeriodos += periodos;
+                        totalGraduados++;
+
+                        String chave;
+                        if (periodos <= duracaoMinima) {
+                            chave = duracaoMinima + " ou menos";
+                        } else if (periodos >= duracaoMaxima) {
+                            chave = duracaoMaxima + " ou mais";
+                        } else {
+                            chave = String.valueOf(periodos);
+                        }
+
+                        contagemAgrupada.put(chave, contagemAgrupada.getOrDefault(chave, 0) + 1);
+                    }
+                }
+            }
+        }
+
+        MediaPeriodosDTO resultado = new MediaPeriodosDTO();
+
+        if (totalGraduados == 0) {
+            resultado.setMedia_periodos_para_se_formar(0.0);
+            resultado.setQuantidade_media_periodos_para_se_formar(Collections.emptyList());
+            resultado.setDistribuicaoPorPeriodoFormatura(Collections.emptyList());
+            resultado.setPeriodoEmDestaque(null);
+            return resultado;
+        }
+
+        double media = (double) somaPeriodos / totalGraduados;
+        int floor = (int) Math.floor(media);
+        int ceil = (int) Math.ceil(media);
+
+        resultado.setMedia_periodos_para_se_formar(round2(media));
+        resultado.setQuantidade_media_periodos_para_se_formar(
+                floor == ceil ? List.of(floor) : List.of(floor, ceil)
+        );
+
+        String periodoMaisComum = null;
+        int maxFrequencia = -1;
+
+        for (Map.Entry<String, Integer> entry : contagemAgrupada.entrySet()) {
+            if (entry.getValue() > maxFrequencia) {
+                maxFrequencia = entry.getValue();
+                periodoMaisComum = entry.getKey();
+            }
+        }
+
+        resultado.setPeriodoEmDestaque(periodoMaisComum);
+
+        String grupoMenor = duracaoMinima + " ou menos";
+        String grupoMaior = duracaoMaxima + " ou mais";
+        List<QuantidadeRealPeriodosDTO> distribuicao = new ArrayList<>();
+
+        if (contagemAgrupada.containsKey(grupoMenor)) {
+            distribuicao.add(criarDTO(grupoMenor, contagemAgrupada.get(grupoMenor), totalGraduados));
+        }
+
+        int finalTotalGraduados = totalGraduados;
+        contagemAgrupada.entrySet().stream()
+                .filter(e -> !e.getKey().equals(grupoMenor) && !e.getKey().equals(grupoMaior))
+                .sorted(Comparator.comparingInt(e -> parseInt(e.getKey())))
+                .forEach(entry -> {
+                    distribuicao.add(criarDTO(entry.getKey()+" períodos", entry.getValue(), finalTotalGraduados));
+                });
+
+        if (contagemAgrupada.containsKey(grupoMaior)) {
+            distribuicao.add(criarDTO(grupoMaior, contagemAgrupada.get(grupoMaior), totalGraduados));
+        }
+
+        resultado.setDistribuicaoPorPeriodoFormatura(distribuicao);
+        return resultado;
+    }
+
+    public List<TaxasCalculadasGraduadosDTO> calcularTaxasGraduados(
+            Map<String, List<StudentDTO>> estudantesPorPeriodo,
+            int duracaoMinima,
+            int duracaoMaxima
+    ) {
+        Map<String, List<StudentDTO>> agrupadosPorPeriodoDeFormatura = new HashMap<>();
+
+        for (List<StudentDTO> estudantes : estudantesPorPeriodo.values()) {
+            for (StudentDTO estudante : estudantes) {
+                if ("graduado".equalsIgnoreCase(estudante.getMotivoDeEvasao())) {
+                    Integer periodos = estudante.getPeriodosCompletados();
+                    if (periodos == null) continue;
+
+                    String chave;
+                    if (periodos <= duracaoMinima) {
+                        chave = duracaoMinima + " ou menos";
+                    } else if (periodos >= duracaoMaxima) {
+                        chave = duracaoMaxima + " ou mais";
+                    } else {
+                        chave = String.valueOf(periodos);
+                    }
+
+                    agrupadosPorPeriodoDeFormatura
+                            .computeIfAbsent(chave, k -> new ArrayList<>())
+                            .add(estudante);
+                }
+            }
+        }
+
+        List<TaxasCalculadasGraduadosDTO> resultado = new ArrayList<>();
+
+        for (Map.Entry<String, List<StudentDTO>> entry : agrupadosPorPeriodoDeFormatura.entrySet()) {
+            String chave = entry.getKey();
+            List<StudentDTO> grupo = entry.getValue();
+
+            List<Double> velocidades = new ArrayList<>();
+            List<Double> taxasSucesso = new ArrayList<>();
+            List<Double> cras = new ArrayList<>();
+
+            for (StudentDTO estudante : grupo) {
+                if (estudante.getVelocidadeMedia() != null) {
+                    velocidades.add(estudante.getVelocidadeMedia());
+                }
+                if (estudante.getTaxaDeSucesso() != null) {
+                    taxasSucesso.add(estudante.getTaxaDeSucesso());
+                }
+                if (estudante.getCra() != null) {
+                    cras.add(estudante.getCra());
+                }
+            }
+
+            double mediaVelocidade = CalculoUtils.calcularMedia(velocidades);
+            double mediaTaxaSucesso = CalculoUtils.calcularMedia(taxasSucesso);
+            double mediaCra = CalculoUtils.calcularMedia(cras);
+
+            double desvioVelocidade = CalculoUtils.calcularDesvioPadrao(velocidades, mediaVelocidade);
+            double desvioTaxaSucesso = CalculoUtils.calcularDesvioPadrao(taxasSucesso, mediaTaxaSucesso);
+            double desvioCra = CalculoUtils.calcularDesvioPadrao(cras, mediaCra);
+
+            TaxasCalculadasGraduadosDTO dto = new TaxasCalculadasGraduadosDTO();
+            dto.setQuantidade_de_periodos(chave);
+            dto.setQuantidade_de_graduados(grupo.size());
+            dto.setVelocidade_media(CalculoUtils.round2(mediaVelocidade));
+            dto.setTaxa_de_sucesso_media(CalculoUtils.round2(mediaTaxaSucesso));
+            dto.setCra_medio(CalculoUtils.round2(mediaCra));
+            dto.setDesvio_padrao_velocidade_media(CalculoUtils.round2(desvioVelocidade));
+            dto.setDesvio_padrao_taxa_de_sucesso_media(CalculoUtils.round2(desvioTaxaSucesso));
+            dto.setDesvio_padrao_cra_medio(CalculoUtils.round2(desvioCra));
+
+            resultado.add(dto);
+        }
+
+        resultado.sort(Comparator.comparingInt(dto -> {
+            String chave = dto.getQuantidade_de_periodos();
+            if (chave.endsWith("ou menos")) {
+                return parseInt(chave.split(" ")[0]) - 1;
+            } else if (chave.endsWith("ou mais")) {
+                return parseInt(chave.split(" ")[0]) + 1;
+            } else {
+                return parseInt(chave);
+            }
+        }));
+
+        return resultado;
+    }
+
+    public TaxasCalculadasGraduadosGlobaisDTO calcularTaxasGraduadosGlobais(
+            Map<String, List<StudentDTO>> estudantesPorPeriodo
+    ) {
+        List<Double> velocidades = new ArrayList<>();
+        List<Double> taxasSucesso = new ArrayList<>();
+        List<Double> cras = new ArrayList<>();
+
+        for (List<StudentDTO> estudantes : estudantesPorPeriodo.values()) {
+            for (StudentDTO estudante : estudantes) {
+                if ("graduado".equalsIgnoreCase(estudante.getMotivoDeEvasao())) {
+                    if (estudante.getVelocidadeMedia() != null) {
+                        velocidades.add(estudante.getVelocidadeMedia());
+                    }
+                    if (estudante.getTaxaDeSucesso() != null) {
+                        taxasSucesso.add(estudante.getTaxaDeSucesso());
+                    }
+                    if (estudante.getCra() != null) {
+                        cras.add(estudante.getCra());
+                    }
+                }
+            }
+        }
+
+        TaxasCalculadasGraduadosGlobaisDTO dto = new TaxasCalculadasGraduadosGlobaisDTO();
+        dto.setVelocidade_media_global(CalculoUtils.round2(CalculoUtils.calcularMedia(velocidades)));
+        dto.setTaxa_de_sucesso_media_global(CalculoUtils.round2(CalculoUtils.calcularMedia(taxasSucesso)));
+        dto.setCra_medio_global(CalculoUtils.round2(CalculoUtils.calcularMedia(cras)));
+
+        return dto;
+    }
+
+    public List<Double> calcularQtdMediaCreditos(Map<String, List<StudentDTO>> estudantesPorPeriodo) {
+        List<Double> creditosMatriculados = new ArrayList<>();
+        List<Double> creditosReprovados = new ArrayList<>();
+
+        for (List<StudentDTO> estudantes : estudantesPorPeriodo.values()) {
+            for (StudentDTO estudante : estudantes) {
+                if ("graduado".equalsIgnoreCase(estudante.getMotivoDeEvasao())) {
+                    if (estudante.getCreditosTentados() != null) {
+                        creditosMatriculados.add(Double.valueOf(estudante.getCreditosTentados()));
+                    }
+                    if (estudante.getCreditosFalhados() != null) {
+                        creditosReprovados.add(Double.valueOf(estudante.getCreditosFalhados()));
+                    }
+                }
+            }
+        }
+
+        double mediaMatriculados = Math.round(CalculoUtils.round2(CalculoUtils.calcularMedia(creditosMatriculados)));
+        double mediaReprovados = Math.round(CalculoUtils.round2(CalculoUtils.calcularMedia(creditosReprovados)));
+
+        return List.of(mediaMatriculados, mediaReprovados);
+    }
+
+
+    private QuantidadeRealPeriodosDTO criarDTO(String chave, int qtd, int totalGraduados) {
+        QuantidadeRealPeriodosDTO dto = new QuantidadeRealPeriodosDTO();
+        dto.setQuantidadeDePeriodos(chave);
+        dto.setQuantidadeDeGraduados(qtd);
+        double percentual = (qtd * 100.0) / totalGraduados;
+        dto.setPorcentagemDeGraduados(Math.round(percentual * 100.0) / 100.0);
+        return dto;
+    }
+
+    public CurriculoSigDTO buscarCurriculo(Integer codigoDoCurso, String codigoDoCurriculo) {
+        String url = dasSigUrl + "/curriculos?curso=" + codigoDoCurso;
+
+        ResponseEntity<List<FullCurriculumSigModel>> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        List<FullCurriculumSigModel> curriculos = response.getBody();
+
+        if (curriculos == null || curriculos.isEmpty()) {
+            throw new NoSuchElementException("Nenhum currículo encontrado para o curso " + codigoDoCurso);
+        }
+
+        return curriculos.stream()
+                .filter(c -> codigoDoCurriculo.equals(c.getCodigoDoCurriculo()))
+                .findFirst()
+                .map(CurriculoSigDTO::fromModel)
+                .orElseThrow(() -> new NoSuchElementException(
+                        "Currículo " + codigoDoCurriculo + " não encontrado para o curso " + codigoDoCurso));
+    }
+
+    /* sem funcionar por causa do bug no endpoint de currículos do das-sig
+    public CurriculoSigDTO buscarCurriculo(Integer codigoDoCurso, String codigoDoCurriculo) {
+        String url = dasSigUrl +
+                "/curriculos/curriculo" +
+                "?curso=" + codigoDoCurso +
+                "&curriculo=" + codigoDoCurriculo;
+
+        ResponseEntity<FullCurriculumSigModel> response = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {}
+        );
+
+        FullCurriculumSigModel curriculo = response.getBody();
+        assert curriculo != null;
+        return CurriculoSigDTO.fromModel(curriculo);
+    }
+    */
+
+}

@@ -1,0 +1,17 @@
+package br.com.eurecagraduacao.backend.model.eureca;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+public class CurriculumCodeModel {
+
+    @JsonProperty("codigo_do_curriculo")
+    private Integer codigoDoCurriculo;
+
+    public Integer getCodigoDoCurriculo() {
+        return codigoDoCurriculo;
+    }
+
+    public void setCodigoDoCurriculo(Integer codigoDoCurriculo) {
+        this.codigoDoCurriculo = codigoDoCurriculo;
+    }
+}
