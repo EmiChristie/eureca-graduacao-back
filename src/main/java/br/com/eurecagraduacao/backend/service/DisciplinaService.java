@@ -56,7 +56,7 @@ public class DisciplinaService {
 
     private Double calcularMediaDeNotas(List<EnrollmentDTO> matriculas) {
         List<Double> notasDosAprovados = matriculas.stream()
-                .filter(m -> "aprovado".equalsIgnoreCase(m.getStatus()) && m.getMediaFinal() != null)
+                .filter(m -> m.getStatus() != null && "aprovado".equalsIgnoreCase(m.getStatus()) && m.getMediaFinal() != null)
                 .map(EnrollmentDTO::getMediaFinal)
                 .toList();
 
@@ -70,7 +70,9 @@ public class DisciplinaService {
         for (EnrollmentDTO matricula : matriculas) {
             String chave;
 
-            if (matricula.getStatus().equalsIgnoreCase("aprovado") &&
+            if(matricula.getStatus() == null) continue;
+            else if (matricula.getStatus().equalsIgnoreCase("aprovado") &&
+                    matricula.getTipo() != null &&
                     matricula.getTipo().equalsIgnoreCase("dispensa")) {
                 chave = "Dispensados";
             } else if (matricula.getStatus().equalsIgnoreCase("dispensado")) {
